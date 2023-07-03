@@ -225,12 +225,4 @@ static inline v4_t m4_mulv4(m4x4_t m, v4_t v);
 
 static void m4_print(m4x4_t m);
 
-// Quaternion  Math! Ordered in init, common quaternions,
-// getting given components, quaternion arithmetic,
-// quaternion functions, quaternion exponents and slerp,
-// quaternion booleans, and printing.
-// ------------------------------------------------------
-
-
-
 #endif
