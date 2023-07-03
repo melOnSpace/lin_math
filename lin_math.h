@@ -5,14 +5,14 @@
 #include <math.h>
 #include <stdio.h>
 
-#define PI_F 3.141592f;
-#define PI_D 3.14159265358979323846;
+#define PI_F 3.141592f
+#define PI_D 3.14159265358979323846
 
-#define e_F 2.718281f;
-#define e_D 2.71828182845904523536;
+#define e_F 2.718281f
+#define e_D 2.71828182845904523536
 
-#define EPSILON_F 1.192092896e-07f;
-#define EPSILON_D 2.2204460492503131e-016;
+#define EPSILON_F 1.192092896e-07f
+#define EPSILON_D 2.2204460492503131e-016
 
 // Type Definition of various vectors, a quaternion, and a 4x4
 // matrix type! All types are unions, therefore their members can
@@ -118,8 +118,8 @@ static inline float v2_dot(v2_t a, v2_t b);
 static inline float v2_angle(v2_t a, v2_t b);
 static inline int v2_isZero(v2_t v);
 
-static int v2_print(v2_t v);
-static int v2_println(v2_t v);
+int v2_print(v2_t v);
+int v2_println(v2_t v);
 
 // 3D Vector functions! These are just the
 // decorations
@@ -147,8 +147,8 @@ static inline float v3_dot(v3_t a, v3_t b);
 static inline float v3_angle(v3_t a, v3_t b);
 static inline int v3_isZero(v3_t v);
 
-static int v3_print(v3_t v);
-static int v3_println(v3_t v);
+int v3_print(v3_t v);
+int v3_println(v3_t v);
 
 // 4D Vector functions! These are just the
 // decorations
@@ -176,8 +176,8 @@ static inline float v4_dot(v4_t a, v4_t b);
 static inline float v4_angle(v4_t a, v4_t b);
 static inline int v4_isZero(v4_t v);
 
-static int v4_print(v4_t v);
-static int v4_println(v4_t v);
+int v4_print(v4_t v);
+int v4_println(v4_t v);
 
 // Casting vectors to other vector types <3
 // These will all cast one type to another. Data can
@@ -234,10 +234,9 @@ static inline v4_t m4_v2mul(v2_t v, m4x4_t m);
 static inline v4_t m4_v3mul(v3_t v, m4x4_t m);
 static inline v4_t m4_v4mul(v4_t v, m4x4_t m);
 
-static int m4_print(m4x4_t m);
-static int m4_println(m4x4_t m);
+int m4_print(m4x4_t m);
+int m4_println(m4x4_t m);
 
-#define LIN_MATH3D_IMPLEMENTATION
 #ifdef LIN_MATH3D_IMPLEMENTATION
 
 // 2D Vectors Implementaions
@@ -340,8 +339,8 @@ static inline int v2_isZero(v2_t v) {
 }
 
 
-static int v2_print(v2_t v) { return printf("[%f, %f]", v.x, v.y); }
-static int v2_println(v2_t v) { return printf("[%f, %f]\n", v.x, v.y); }
+int v2_print(v2_t v) { return printf("[%f, %f]", v.x, v.y); }
+int v2_println(v2_t v) { return printf("[%f, %f]\n", v.x, v.y); }
 
 
 // 3D Vectors Implementaions
@@ -422,9 +421,9 @@ static inline v3_t v3_divs(v3_t v, float s) {
 
 static inline v3_t v3_cross(v3_t a, v3_t b) {
     return (v3_t){
-        (a.y * b.z) - (a.z * b.y),
-        (a.z * b.x) - (a.x * b.z),
-        (a.x * b.y) - (a.y * b.x),
+        .x = (a.y * b.z) - (a.z * b.y),
+        .y = (a.z * b.x) - (a.x * b.z),
+        .z = (a.x * b.y) - (a.y * b.x),
     };
 }
 
@@ -459,8 +458,8 @@ static inline int v3_isZero(v3_t v) {
 }
 
 
-static int v3_print(v3_t v) { return printf("[%f, %f, %f]", v.x, v.y, v.z); }
-static int v3_println(v3_t v) { return printf("[%f, %f, %f]\n", v.x, v.y, v.z); }
+int v3_print(v3_t v) { return printf("[%f, %f, %f]", v.x, v.y, v.z); }
+int v3_println(v3_t v) { return printf("[%f, %f, %f]\n", v.x, v.y, v.z); }
 
 // 4D Vectors Implementaions
 // -------------------------
@@ -585,37 +584,37 @@ static inline int v4_isZero(v4_t v) {
 }
 
 
-static int v4_print(v4_t v) { return printf("[%f, %f, %f, %f]", v.x, v.y, v.z, v.w); }
-static int v4_println(v4_t v) { return printf("[%f, %f, %f, %f]\n", v.x, v.y, v.z, v.w); }
+int v4_print(v4_t v) { return printf("[%f, %f, %f, %f]", v.x, v.y, v.z, v.w); }
+int v4_println(v4_t v) { return printf("[%f, %f, %f, %f]\n", v.x, v.y, v.z, v.w); }
 
 
 // Vector Casting Implementaions
 // -----------------------------
 
 static inline v2_t v3_to_v2(v3_t v) {
-    return (v2_t){ v.x, v.y };
+    return (v2_t){ .x=v.x, .y=v.y };
 }
 
 static inline v2_t v4_to_v2(v4_t v) {
-    return (v2_t){ v.x, v.y };
+    return (v2_t){ .x=v.x, .y=v.y };
 }
 
 
 static inline v3_t v2_to_v3(v2_t v) {
-    return (v3_t){ v.x, v.y, 0.0f };
+    return (v3_t){ .x=v.x, .y=v.y, .z=0.0f };
 }
 
 static inline v3_t v4_to_v3(v3_t v) {
-    return (v3_t){ v.x, v.y, v.z };
+    return (v3_t){ .x=v.x, .y=v.y, .z=v.z };
 }
 
 
 static inline v4_t v2_to_v4(v2_t v) {
-    return (v4_t){ v.x, v.y, 0.0f, 0.0f };
+    return (v4_t){ .x=v.x, .y=v.y, .z=0.0f, .w=0.0f };
 }
 
 static inline v4_t v3_to_v4(v3_t v) {
-    return (v4_t){ v.x, v.y, v.z, 0.0f };
+    return (v4_t){ .x=v.x, .y=v.y, .z=v.z, .w=0.0f };
 }
 
 
@@ -680,10 +679,10 @@ static inline m4x4_t m4_scaling(v3_t scale) {
 static inline m4x4_t m4_perspective(float fovy, float aratio, float near, float far) {
     float f = 1.0f / tanf(fovy / 2.0f);
 
-    m4x4_t result = m4_scaling({
-        f / aratio,
-        f,
-        (far + near) / (near - far),
+    m4x4_t result = m4_scaling((v3_t){
+        .x = f / aratio,
+        .y = f,
+        .z = (far + near) / (near - far),
     });
 
     result.z3 = (2.0f * far * near) / (near - far);
@@ -698,9 +697,9 @@ static inline m4x4_t m4_ortho(
         float back, float front) {
 
     m4x4_t result = m4_scaling((v3_t){
-            2.0f / (right - left),
-            2.0f / (top - bottom),
-            2.0f / (back - front),
+            .x = 2.0f / (right - left),
+            .y = 2.0f / (top - bottom),
+            .z = 2.0f / (back - front),
     });
 
     result.x3 = -(right + left) / (right - left);
@@ -853,7 +852,7 @@ static inline v4_t m4_v4mul(v4_t v, m4x4_t m) {
 }
 
 
-static int m4_print(m4x4_t m) {
+int m4_print(m4x4_t m) {
     const char* str = \
 "_ %f, %f, %f, %f _\
 | %f, %f, %f, %f |\
@@ -865,7 +864,7 @@ static int m4_print(m4x4_t m) {
                        m.w0, m.w1, m.w2, m.w3);
 }
 
-static int m4_println(m4x4_t m) {
+int m4_println(m4x4_t m) {
     const char* str = \
 "_ %f, %f, %f, %f _\
 | %f, %f, %f, %f |\
