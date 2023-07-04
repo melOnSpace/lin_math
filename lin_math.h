@@ -34,48 +34,38 @@
 // ----------------------------------------------------------------
 
 typedef union {
-    struct { float x, y; };
-    struct { float u, v; };
-    struct { float r, g; };
-    struct { float real, i; };
-    struct { float width, height; };
+    struct { float x, y; };          // Vector
+    struct { float u, v; };          // Texture
+    struct { float r, g; };          // Color
+    struct { float real, i; };       // Imaginary
+    struct { float width, height; }; // Size
 
-    float data[2];
+    float data[2]; // Raw Data
 } v2_t;
 
 typedef union {
-    struct { float x, y, z; };
-    struct { float u, v, t; };
-    struct { float r, g, b; };
-    struct { float real, i, j; };
-    struct { float width, height, depth; };
-    struct { float pitch, yaw, roll; };
+    struct { float x, y, z; };              // Vector
+    struct { float u, v, t; };              // Texture
+    struct { float r, g, b; };              // Color
+    struct { float real, i, j; };           // Imaginary
+    struct { float width, height, depth; }; // Size
+    struct { float pitch, yaw, roll; };     // Euler Angle
 
-    v2_t v2;
-    float data[3];
+    v2_t v2;       // Cast down
+    float data[3]; // Raw Data
 } v3_t;
 
 typedef union {
-    struct { float x, y, z, w; };
-    struct { float u, v, t, s; };
-    struct { float r, g, b, a; };
-    struct { float real, i, j, k; };
-    struct { float width, height, depth, length; };
-    struct { v3_t axis; float angle; };
+    struct { float x, y, z, w; };                 // Vector
+    struct { float u, v, t, s; };                 // Texture (4D textures?)
+    struct { float r, g, b, a; };                 // Color
+    struct { float real, i, j, k; };              // Quaternion (imaginary)
+    struct { float width, height, depth, time; }; // 4D Sizes ¯\_(ツ)_/¯
+    struct { v3_t axis; float angle; };           // Axis Angle
 
-    v2_t v2; v3_t v3;
-    float data[4];
+    v2_t v2; v3_t v3; // Cast down
+    float data[4];    // Raw Data
 } v4_t;
-
-typedef union {
-    struct { float real, i, j, k; };
-    struct { float a, b, c, d; };
-    struct { float q0, q1, q2, q3; };
-    struct { float w; v3_t v; };
-
-    v4_t v4;
-    float data[4];
-} qt_t;
 
 typedef union {
     struct { v4_t c0, c1, c2, c3; };
@@ -107,6 +97,7 @@ static inline v2_t v2_divs(v2_t v, float s);
 
 static inline v2_t v2_proj(v2_t a, v2_t b);
 static inline v2_t v2_norm(v2_t v);
+static inline v2_t v2_lerp(v2_t a, v2_t b, float t);
 
 static inline float v2_mag(v2_t v);
 static inline float v2_fastmag(v2_t v);
@@ -138,6 +129,7 @@ static inline v3_t v3_divs(v3_t v, float s);
 static inline v3_t v3_cross(v3_t a, v3_t b);
 static inline v3_t v3_proj(v3_t a, v3_t b);
 static inline v3_t v3_norm(v3_t v);
+static inline v3_t v3_lerp(v3_t a, v3_t b, float t);
 
 static inline float v3_mag(v3_t v);
 static inline float v3_fastmag(v3_t v);
@@ -169,6 +161,7 @@ static inline v4_t v4_divs(v4_t v, float s);
 static inline v4_t v4_proj(v4_t a, v4_t b);
 static inline v4_t v4_norm(v4_t v);
 static inline v4_t v4_normAxis(v4_t v);
+static inline v4_t v4_lerp(v4_t a, v4_t b, float t);
 
 static inline float v4_mag(v4_t v);
 static inline float v4_fastmag(v4_t v);
@@ -191,16 +184,13 @@ static inline v2_t v3_to_v2(v3_t v);
 static inline v2_t v4_to_v2(v4_t v);
 
 static inline v3_t v2_to_v3(v2_t v);
-static inline v3_t v4_to_v3(v3_t v);
+static inline v3_t v4_to_v3(v4_t v);
 
 static inline v4_t v2_to_v4(v2_t v);
 static inline v4_t v3_to_v4(v3_t v);
 
-// Various Matrix Functions! Order time! Init functions, then
-// common matrices, OpenGL camera matrices, a short cut for a
-// final combined OpenGL camera matrix, matrix operations, 
-// vector-matrix multiplication, and printing.
-// -----------------------------------------------------------
+// Various Matrix Functions!
+// -------------------------
 
 static inline m4x4_t m4v(v4_t c0, v4_t c1, v4_t c2, v4_t c3);
 static inline m4x4_t m4(
@@ -332,6 +322,10 @@ static inline v2_t v2_norm(v2_t v) {
     return v2_divs(v, v2_mag(v));
 }
 
+static inline v2_t v2_lerp(v2_t a, v2_t b, float t) {
+    return v2_add(v2_muls(a, 1.0f - t), v2_muls(b, t));
+}
+
 
 static inline float v2_mag(v2_t v) {
     return sqrtf(v.x * v.x + v.y * v.y);
@@ -445,6 +439,10 @@ static inline v3_t v3_proj(v3_t a, v3_t b) {
 
 static inline v3_t v3_norm(v3_t v) {
     return v3_divs(v, v3_mag(v));
+}
+
+static inline v3_t v3_lerp(v3_t a, v3_t b, float t) {
+    return v3_add(v3_muls(a, 1.0f - t), v3_muls(b, t));
 }
 
 
@@ -570,6 +568,10 @@ static inline v4_t v4_normAxis(v4_t v) {
     };
 }
 
+static inline v4_t v4_lerp(v4_t a, v4_t b, float t) {
+    return v4_add(v4_muls(a, 1.0f - t), v4_muls(b, t));
+}
+
 
 static inline float v4_mag(v4_t v) {
     return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
@@ -597,11 +599,11 @@ static inline int v4_isZero(v4_t v) {
 // -----------------------------
 
 static inline v2_t v3_to_v2(v3_t v) {
-    return (v2_t){ .x=v.x, .y=v.y };
+    return v.v2;
 }
 
 static inline v2_t v4_to_v2(v4_t v) {
-    return (v2_t){ .x=v.x, .y=v.y };
+    return v.v2;
 }
 
 
@@ -609,8 +611,8 @@ static inline v3_t v2_to_v3(v2_t v) {
     return (v3_t){ .x=v.x, .y=v.y, .z=0.0f };
 }
 
-static inline v3_t v4_to_v3(v3_t v) {
-    return (v3_t){ .x=v.x, .y=v.y, .z=v.z };
+static inline v3_t v4_to_v3(v4_t v) {
+    return v.v3;
 }
 
 
@@ -861,8 +863,8 @@ static inline v4_t m4_v4mul(v4_t v, m4x4_t m) {
 
 #endif
 
-#ifndef LIN_DOUBLE
-#define LIN_DOUBLE
+
+#ifdef LIN_DOUBLE
 
 #define E_D 2.71828182845904523536
 #define PI_D 3.14159265358979323846
@@ -933,6 +935,7 @@ static inline v2_d v2d_divs(v2_d v, double s);
 
 static inline v2_d v2d_proj(v2_d a, v2_d b);
 static inline v2_d v2d_norm(v2_d v);
+static inline v2_d v2d_lerp(v2_d a, v2_d b, double t);
 
 static inline double v2d_mag(v2_d v);
 static inline double v2d_fastmag(v2_d v);
@@ -962,6 +965,7 @@ static inline v3_d v3d_divs(v3_d v, double s);
 static inline v3_d v3d_cross(v3_d a, v3_d b);
 static inline v3_d v3d_proj(v3_d a, v3_d b);
 static inline v3_d v3d_norm(v3_d v);
+static inline v3_d v3d_lerp(v3_d a, v3_d b, double t);
 
 static inline double v3d_mag(v3_d v);
 static inline double v3d_fastmag(v3_d v);
@@ -991,6 +995,7 @@ static inline v4_d v4d_divs(v4_d v, double s);
 static inline v4_d v4d_proj(v4_d a, v4_d b);
 static inline v4_d v4d_norm(v4_d v);
 static inline v4_d v4d_normAxis(v4_d v);
+static inline v4_d v4d_lerp(v4_d a, v4_d b, double t);
 
 static inline double v4d_mag(v4_d v);
 static inline double v4d_fastmag(v4_d v);
@@ -1011,7 +1016,7 @@ static inline v2_d v3d_to_v2d(v3_d v);
 static inline v2_d v4d_to_v2d(v4_d v);
 
 static inline v3_d v2d_to_v3d(v2_d v);
-static inline v3_d v4d_to_v3d(v3_d v);
+static inline v3_d v4d_to_v3d(v4_d v);
 
 static inline v4_d v2d_to_v4d(v2_d v);
 static inline v4_d v3d_to_v4d(v3_d v);
@@ -1140,6 +1145,10 @@ static inline v2_d v2d_norm(v2_d v) {
     return v2d_divs(v, v2d_mag(v));
 }
 
+static inline v2_d v2d_lerp(v2_d a, v2_d b, double t) {
+    return v2d_add(v2d_muls(a, 1.0 - t), v2d_muls(b, t));
+}
+
 
 static inline double v2d_mag(v2_d v) {
     return sqrt(v.x * v.x + v.y * v.y);
@@ -1253,6 +1262,10 @@ static inline v3_d v3d_proj(v3_d a, v3_d b) {
 
 static inline v3_d v3d_norm(v3_d v) {
     return v3d_divs(v, v3d_mag(v));
+}
+
+static inline v3_d v3d_lerp(v3_d a, v3_d b, double t) {
+    return v3d_add(v3d_muls(a, 1.0 - t), v3d_muls(b, t));
 }
 
 
@@ -1378,6 +1391,10 @@ static inline v4_d v4d_normAxis(v4_d v) {
     };
 }
 
+static inline v4_d v4d_lerp(v4_d a, v4_d b, double t) {
+    return v4d_add(v4d_muls(a, 1.0 - t), v4d_muls(b, t));
+}
+
 
 static inline double v4d_mag(v4_d v) {
     return sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
@@ -1405,11 +1422,11 @@ static inline int v4_isZero(v4_d v) {
 // -----------------------------
 
 static inline v2_d v3d_do_v2d(v3_d v) {
-    return (v2_d){ .x=v.x, .y=v.y };
+    return v.v2;
 }
 
 static inline v2_d v4d_to_v2d(v4_d v) {
-    return (v2_d){ .x=v.x, .y=v.y };
+    return v.v2;
 }
 
 
@@ -1417,8 +1434,8 @@ static inline v3_d v2d_to_v3d(v2_d v) {
     return (v3_d){ .x=v.x, .y=v.y, .z=0.0 };
 }
 
-static inline v3_d v4d_to_v3d(v3_d v) {
-    return (v3_d){ .x=v.x, .y=v.y, .z=v.z };
+static inline v3_d v4d_to_v3d(v4_d v) {
+    return v.v3;
 }
 
 
@@ -1599,30 +1616,6 @@ static inline m4x4_d m4d_mul(m4x4_d a, m4x4_d b) {
 
     return (m4x4_d){ .c0=c0, .c1=c1, .c2=c2, .c3=c3 };
 }
-
-// static inline m4x4_d m4d_mul(m4x4_d a, m4x4_d b) {
-//     return (m4x4_d) {
-//         .x0 = a.x0*b.x0 + a.x1*b.y0 + a.x2*b.z0 + a.x3*b.w0,
-//         .y0 = a.y0*b.x0 + a.y1*b.y0 + a.y2*b.z0 + a.y3*b.w0,
-//         .z0 = a.z0*b.x0 + a.z1*b.y0 + a.z2*b.z0 + a.z3*b.w0,
-//         .w0 = a.w0*b.x0 + a.w1*b.y0 + a.w2*b.z0 + a.w3*b.w0,
-//
-//         .x1 = a.x0*b.x1 + a.x1*b.y1 + a.x2*b.z1 + a.x3*b.w1,
-//         .y1 = a.y0*b.x1 + a.y1*b.y1 + a.y2*b.z1 + a.y3*b.w1,
-//         .z1 = a.z0*b.x1 + a.z1*b.y1 + a.z2*b.z1 + a.z3*b.w1,
-//         .w1 = a.w0*b.x1 + a.w1*b.y1 + a.w2*b.z1 + a.w3*b.w1,
-//
-//         .x2 = a.x0*b.x2 + a.x1*b.y2 + a.x2*b.z2 + a.x3*b.w2,
-//         .y2 = a.y0*b.x2 + a.y1*b.y2 + a.y2*b.z2 + a.y3*b.w2,
-//         .z2 = a.z0*b.x2 + a.z1*b.y2 + a.z2*b.z2 + a.z3*b.w2,
-//         .w2 = a.w0*b.x2 + a.w1*b.y2 + a.w2*b.z2 + a.w3*b.w2,
-//
-//         .x3 = a.x0*b.x3 + a.x1*b.y3 + a.x2*b.z3 + a.x3* b.w3,
-//         .y3 = a.y0*b.x3 + a.y1*b.y3 + a.y2*b.z3 + a.y3* b.w3,
-//         .z3 = a.z0*b.x3 + a.z1*b.y3 + a.z2*b.z3 + a.z3* b.w3,
-//         .w3 = a.w0*b.x3 + a.w1*b.y3 + a.w2*b.z3 + a.w3* b.w3,
-//     };
-// }
 
 
 static inline m4x4_d m4d_muls(m4x4_d m, double s) {
