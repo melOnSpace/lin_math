@@ -218,6 +218,9 @@ static inline m4x4_t m4_subs(m4x4_t m, float s);
 static inline m4x4_t m4_mul(m4x4_t a, m4x4_t b);
 static inline m4x4_t m4_muls(m4x4_t m, float s);
 
+// This is mostly a joke function. Like, why lerp a matrix?
+static inline m4x4_t m4_lerp(m4x4_t a, m4x4_t b, float t);
+
 static inline v4_t m4_mulv2(m4x4_t m, v2_t v);
 static inline v4_t m4_mulv3(m4x4_t m, v3_t v);
 static inline v4_t m4_mulv4(m4x4_t m, v4_t v);
@@ -803,6 +806,15 @@ static inline m4x4_t m4_muls(m4x4_t m, float s) {
     };
 }
 
+static inline m4x4_t m4_lerp(m4x4_t a, m4x4_t b, float t) {
+    return (m4x4_t) {
+        .c0 = v4_lerp(a.c0, b.c0, t),
+        .c1 = v4_lerp(a.c1, b.c1, t),
+        .c2 = v4_lerp(a.c3, b.c2, t),
+        .c3 = v4_lerp(a.c3, b.c3, t),
+    };
+}
+
 
 static inline v4_t m4_mulv2(m4x4_t m, v2_t v) {
     return (v4_t){
@@ -1052,6 +1064,9 @@ static inline m4x4_d m4d_sub(m4x4_d a, m4x4_d b);
 static inline m4x4_d m4d_subs(m4x4_d m, double s);
 static inline m4x4_d m4d_mul(m4x4_d a, m4x4_d b);
 static inline m4x4_d m4d_muls(m4x4_d m, double s);
+
+// This is mostly a joke function. Why lerp a matrix?
+static inline m4x4_d m4d_lerp(m4x4_d a, m4x4_d b, double t);
 
 static inline v4_d m4d_mulv2(m4x4_d m, v2_d v);
 static inline v4_d m4d_mulv3(m4x4_d m, v3_d v);
@@ -1617,13 +1632,21 @@ static inline m4x4_d m4d_mul(m4x4_d a, m4x4_d b) {
     return (m4x4_d){ .c0=c0, .c1=c1, .c2=c2, .c3=c3 };
 }
 
-
 static inline m4x4_d m4d_muls(m4x4_d m, double s) {
     return (m4x4_d){
         .x0=m.x0 * s, .y0=m.y0 * s, .z0=m.z0 * s, .w0=m.w0 * s,
         .x1=m.x1 * s, .y1=m.y1 * s, .z1=m.z1 * s, .w1=m.w1 * s,
         .x2=m.x2 * s, .y2=m.y2 * s, .z2=m.z2 * s, .w2=m.w2 * s,
         .x3=m.x3 * s, .y3=m.y3 * s, .z3=m.z3 * s, .w3=m.w3 * s,
+    };
+}
+
+static inline m4x4_d m4d_lerp(m4x4_d a, m4x4_d b, double t) {
+    return (m4x4_d) {
+        .c0 = v4d_lerp(a.c0, b.c0, t);
+        .c1 = v4d_lerp(a.c1, b.c1, t);
+        .c2 = v4d_lerp(a.c2, b.c2, t);
+        .c3 = v4d_lerp(a.c3, b.c3, t);
     };
 }
 
