@@ -5,9 +5,17 @@
 #include <stdio.h>
 
 
-#define PI_F 3.141592f
-#define E_F 2.718281f
-#define EPSILON_F 1.192092896e-07f
+#define LIN_PI_F         3.141592653f
+#define LIN_TAU_F        6.283185307f
+#define LIN_E_F          2.718281828f
+#define LIN_EPSILON_F    1.192092896e-07f
+
+#define LIN_SQRT_TWO_F   1.414213562f
+#define LIN_SQRT_THREE_F 1.732050807f
+#define LIN_SQRT_FIVE_F  2.236067977f
+
+#define LIN_LN2_F        0.693147180f
+#define LIN_LN10_F       2.302585092f
 
 
 // Type Definition of various vectors, a quaternion, and a 4x4
@@ -15,7 +23,10 @@
 // be accessed in different ways depending on the context. A
 // comment next to the union member will explain (hopefully) their
 // context.
-// 
+//
+// Add this before including #define LIN_MATH3D_IMPLEMENTATION
+// #define LIN_DOUBLE
+// #define LIN_MATH3D_IMPLEMENTATION
 // All given Vectors can be 2D, 3D, or 4D. They are defined as
 // v#_t where 2 <= # <= 4. For example a 3D Vector is a v3_t; a
 // 2D Vector is v2_t. Vectors are a struct of # floats.
@@ -201,14 +212,28 @@ static inline m4x4_t m4(
 static inline m4x4_t m4Init(float i);
 
 static inline m4x4_t m4_identity(void);
-static inline m4x4_t m4_translation(v3_t offset);
-static inline m4x4_t m4_scaling(v3_t scale);
+static inline m4x4_t m4_translation(float x, float y, float z);
+static inline m4x4_t m4v_translation(v3_t offset);
+static inline m4x4_t m4_scaling(float x, float y, float z);
+static inline m4x4_t m4v_scaling(v3_t scale);
 
-static inline m4x4_t m4_perspective(float fovy, float aratio, float near, float far);
+static inline m4x4_t m4_xrot(float x);
+static inline m4x4_t m4_yrot(float y);
+static inline m4x4_t m4_zrot(float z);
+static inline m4x4_t m4_perspective(float fovy, float aratio, float near_plane, float far_plane);
 static inline m4x4_t m4_ortho(
         float left, float right,
         float bottom, float top,
         float back, float front);
+
+// Euler Rotation in order of X-Axis -> Y-Axis -> Z-Axis
+static inline m4x4_t m4_eulerXYZ(float x, float y, float z);
+// Euler Rotation in order of X-Axis -> Y-Axis -> Z-Axis
+static inline m4x4_t m4v_eulerXYZ(v3_t angle);
+// Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
+static inline m4x4_t m4_eulerZYX(float z, float y, float x);
+// Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
+static inline m4x4_t m4v_eulerZYX(v3_t angle);
 
 static inline m4x4_t m4_transpose(m4x4_t m);
 static inline m4x4_t m4_add(m4x4_t a, m4x4_t b);
@@ -230,21 +255,33 @@ static inline v4_t m4_v3mul(v3_t v, m4x4_t m);
 static inline v4_t m4_v4mul(v4_t v, m4x4_t m);
 
 
-#define MATRIX_PRINT_STR \
-"/ %f %f %f %f \\\
-| %f %f %f %f |\
-| %f %f %f %f |\
-\\ %f %f %f %f /"
+#define MATRIX_PRINT_STR "\
+.x0=%f .x1=%f .x2=%f .x3=%f\n\
+.y0=%f .y1=%f .y2=%f .y3=%f\n\
+.z0=%f .z1=%f .z2=%f .z3=%f\n\
+.w0=%f .w1=%f .w2=%f .w3=%f\n"
 
 // Prints a matrix. Workds with both m4x4_t & m4x4_d
 #define m4_println(m) (printf(MATRIX_PRINT_STR, \
             (m).x0, (m).x1, (m).x2, (m).x3,\
             (m).y0, (m).y1, (m).y2, (m).y3,\
             (m).z0, (m).z1, (m).z2, (m).z3,\
-            (m).w0, (m).w1, (m).w2, (m).w3)
+            (m).w0, (m).w1, (m).w2, (m).w3))
+
+#define MATRIX_PRINT_COLOR "\
+\033[33m.x0=\033[0m%f \033[33m.x1=\033[0m%f \033[33m.x2=\033[0m%f \033[33m.x3=\033[0m%f\n\
+\033[33m.y0=\033[0m%f \033[33m.y1=\033[0m%f \033[33m.y2=\033[0m%f \033[33m.y3=\033[0m%f\n\
+\033[33m.z0=\033[0m%f \033[33m.z1=\033[0m%f \033[33m.z2=\033[0m%f \033[33m.z3=\033[0m%f\n\
+\033[33m.w0=\033[0m%f \033[33m.w1=\033[0m%f \033[33m.w2=\033[0m%f \033[33m.w3=\033[0m%f\n"
+
+// Prints a matrix but with color. Workds with both m4x4_t & m4x4_d
+#define m4_printc(m) (printf(MATRIX_PRINT_COLOR, \
+            (m).x0, (m).x1, (m).x2, (m).x3,\
+            (m).y0, (m).y1, (m).y2, (m).y3,\
+            (m).z0, (m).z1, (m).z2, (m).z3,\
+            (m).w0, (m).w1, (m).w2, (m).w3))
 
 
-#define LIN_MATH3D_IMPLEMENTATION
 #ifdef LIN_MATH3D_IMPLEMENTATION
 
 // 2D Vectors Implementaions
@@ -347,7 +384,7 @@ static inline float v2_angle(v2_t a, v2_t b) {
 }
 
 static inline int v2_isZero(v2_t v) {
-    return v2_fastmag(v) < EPSILON_F;
+    return v2_fastmag(v) < LIN_EPSILON_F;
 }
 
 
@@ -466,7 +503,7 @@ static inline float v3_angle(v3_t a, v3_t b) {
 }
 
 static inline int v3_isZero(v3_t v) {
-    return v3_fastmag(v) < EPSILON_F;
+    return v3_fastmag(v) < LIN_EPSILON_F;
 }
 
 
@@ -593,7 +630,7 @@ static inline float v4_angle(v4_t a, v4_t b) {
 }
 
 static inline int v4_isZero(v4_t v) {
-    return v4_fastmag(v) < EPSILON_F;
+    return v4_fastmag(v) < LIN_EPSILON_F;
 }
 
 
@@ -667,7 +704,16 @@ static inline m4x4_t m4_identity(void) {
     };
 }
 
-static inline m4x4_t m4_translation(v3_t offset) {
+static inline m4x4_t m4_translation(float x, float y, float z) {
+    return (m4x4_t){
+        .x0=1.0f, .y0=0.0f, .z0=0.0f, .w0=0.0f,
+        .x1=0.0f, .y1=1.0f, .z1=0.0f, .w1=0.0f,
+        .x2=0.0f, .y2=0.0f, .z2=1.0f, .w2=0.0f,
+        .x3=x,    .y3=y,    .z3=z,    .w3=1.0f,
+    };
+}
+
+static inline m4x4_t m4v_translation(v3_t offset) {
     return (m4x4_t){
         .x0=1.0f,     .y0=0.0f,     .z0=0.0f,     .w0=0.0f,
         .x1=0.0f,     .y1=1.0f,     .z1=0.0f,     .w1=0.0f,
@@ -676,7 +722,7 @@ static inline m4x4_t m4_translation(v3_t offset) {
     };
 }
 
-static inline m4x4_t m4_scaling(v3_t scale) {
+static inline m4x4_t m4v_scaling(v3_t scale) {
     return (m4x4_t){
         .x0=scale.x, .y0=0.0f,    .z0=0.0f,    .w0=0.0f,
         .x1=0.0f,    .y1=scale.y, .z1=0.0f,    .w1=0.0f,
@@ -685,17 +731,63 @@ static inline m4x4_t m4_scaling(v3_t scale) {
     };
 }
 
+static inline m4x4_t m4_scaling(float x, float y, float z) {
+    return (m4x4_t){
+        .x0=x,    .y0=0.0f, .z0=0.0f, .w0=0.0f,
+        .x1=0.0f, .y1=y,    .z1=0.0f, .w1=0.0f,
+        .x2=0.0f, .y2=0.0f, .z2=z,    .w2=0.0f,
+        .x3=0.0f, .y3=0.0f, .z3=0.0f, .w3=1.0f,
+    };
+}
 
-static inline m4x4_t m4_perspective(float fovy, float aratio, float near, float far) {
+
+static inline m4x4_t m4_xrot(float x) {
+    float snx = sinf(x);
+    float csx = cosf(x);
+
+    return (m4x4_t){
+        .x0=1.0f, .x1=0.0f, .x2=0.0f, .x3=0.0f,
+        .y0=0.0f, .y1= csx, .y2=-snx, .y3=0.0f,
+        .z0=0.0f, .z1= snx, .z2= csx, .z3=0.0f,
+        .w0=0.0f, .w1=0.0f, .w2=0.0f, .w3=1.0f,
+    };
+}
+
+static inline m4x4_t m4_yrot(float y) {
+    float sny = sinf(y);
+    float csy = cosf(y);
+
+    return (m4x4_t){
+        .x0= csy, .x1=0.0f, .x2= sny, .x3=0.0f,
+        .y0=0.0f, .y1=1.0f, .y2=0.0f, .y3=0.0f,
+        .z0=-sny, .z1=0.0f, .z2= csy, .z3=0.0f,
+        .w0=0.0f, .w1=0.0f, .w2=0.0f, .w3=1.0f,
+    };
+}
+
+static inline m4x4_t m4_zrot(float z) {
+    float snz = sinf(z);
+    float csz = cosf(z);
+
+    return (m4x4_t){
+        .x0= csz, .x1=-snz, .x2=0.0f, .x3=0.0f,
+        .y0= snz, .y1= csz, .y2=0.0f, .y3=0.0f,
+        .z0=0.0f, .z1=0.0f, .z2=1.0f, .z3=0.0f,
+        .w0=0.0f, .w1=0.0f, .w2=0.0f, .w3=1.0f,
+    };
+}
+
+
+static inline m4x4_t m4_perspective(float fovy, float aratio, float near_plane, float far_plane) {
     float f = 1.0f / tanf(fovy / 2.0f);
 
-    m4x4_t result = m4_scaling((v3_t){
-        .x = f / aratio,
-        .y = f,
-        .z = (far + near) / (near - far),
-    });
+    m4x4_t result = m4_scaling(
+            f / aratio,
+            f,
+            (far_plane + near_plane) / (near_plane - far_plane)
+    );
 
-    result.z3 = (2.0f * far * near) / (near - far);
+    result.z3 = (2.0f * far_plane * near_plane) / (near_plane - far_plane);
     result.w2 = -1.0f;
 
     return result;
@@ -706,17 +798,137 @@ static inline m4x4_t m4_ortho(
         float bottom, float top,
         float back, float front) {
 
-    m4x4_t result = m4_scaling((v3_t){
-            .x = 2.0f / (right - left),
-            .y = 2.0f / (top - bottom),
-            .z = 2.0f / (back - front),
-    });
+    m4x4_t result = m4_scaling(
+            2.0f / (right - left),
+            2.0f / (top - bottom),
+            2.0f / (back - front)
+    );
 
     result.x3 = -(right + left) / (right - left);
     result.y3 = -(top + bottom) / (top - bottom);
     result.z3 = -(back + front) / (back - front);
 
     return result;
+}
+
+
+// Euler Rotation in order of X-Axis -> Y-Axis -> Z-Axis
+static inline m4x4_t m4_eulerXYZ(float x, float y, float z) {
+    float snx = sinf(-x), sny = sinf(-y), snz = sinf(-z);
+    float csx = cosf(-x), csy = cosf(-y), csz = cosf(-z);
+
+    v4_t c0 = {
+	    .x =  csy * csz,
+	    .y = -csx * snz + snx * sny * csz,
+	    .z =  snx * snz + csx * sny * csz,
+	    .w =  0.0f,
+    };
+
+    v4_t c1 = {
+	    .x =  csy * snz,
+	    .y =  csx * csz + snx * sny * snz,
+	    .z = -snx * csz + csx * sny * snz,
+	    .w =  0.0f,
+    };
+
+    v4_t c2 = {
+	    .x = -sny,
+	    .y =  snx * csy,
+	    .z =  csx * csy,
+	    .w =  0.0f,
+    };
+
+    v4_t c3 = { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
+    return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+// Euler Rotation in order of X-Axis -> Y-Axis -> Z-Axis
+static inline m4x4_t m4v_eulerXYZ(v3_t angle) {
+    float snx = sinf(-angle.x), sny = sinf(-angle.y), snz = sinf(-angle.z);
+    float csx = cosf(-angle.x), csy = cosf(-angle.y), csz = cosf(-angle.z);
+
+    v4_t c0 = {
+	    .x =  csy * csz,
+	    .y = -csx * snz + snx * sny * csz,
+	    .z =  snx * snz + csx * sny * csz,
+	    .w =  0.0f,
+    };
+
+    v4_t c1 = {
+	    .x =  csy * snz,
+	    .y =  csx * csz + snx * sny * snz,
+	    .z = -snx * csz + csx * sny * snz,
+	    .w =  0.0f,
+    };
+
+    v4_t c2 = {
+	    .x = -sny,
+	    .y =  snx * csy,
+	    .z =  csx * csy,
+	    .w =  0.0f,
+    };
+
+    v4_t c3 = { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
+    return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+// Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
+static inline m4x4_t m4_eulerZYX(float z, float y, float x) {
+    float snx = sinf(-x), sny = sinf(-y), snz = sinf(-z);
+    float csx = cosf(-x), csy = cosf(-y), csz = cosf(-z);
+
+    v4_t c0 = {
+        .x = csz * csy,
+	    .y = csy * snz,
+	    .z =-sny,
+	    .w =  0.0f,
+    };
+
+    v4_t c1 = {
+	    .x = csz * sny * snx - csx * snz,
+	    .y = csz * csx + snz * sny * snx,
+	    .z = csy * snx,
+	    .w =  0.0f,
+    };
+
+    v4_t c2 = {
+	    .x = snz * snx + csz * csx * sny,
+	    .y = csx * snz * sny - csz * snx,
+	    .z = csy * csx,
+	    .w =  0.0f,
+    };
+    
+
+    v4_t c3 = { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
+    return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+// Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
+static inline m4x4_t m4v_eulerZYX(v3_t angle) {
+    float snx = sinf(-angle.x), sny = sinf(-angle.y), snz = sinf(-angle.z);
+    float csx = cosf(-angle.x), csy = cosf(-angle.y), csz = cosf(-angle.z);
+
+    v4_t c0 = {
+        .x = csz * csy,
+	    .y = csy * snz,
+	    .z =-sny,
+    };
+
+    v4_t c1 = {
+	    .x = csz * sny * snx - csx * snz,
+	    .y = csz * csx + snz * sny * snx,
+	    .z = csy * snx,
+    };
+
+    v4_t c2 = {
+	    .x = snz * snx + csz * csx * sny,
+	    .y = csx * snz * sny - csz * snx,
+	    .z = csy * csx,
+    };
+    
+
+    v4_t c3 = { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
+    return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
 }
 
 
@@ -788,10 +1000,10 @@ static inline m4x4_t m4_mul(m4x4_t a, m4x4_t b) {
 	};
 
     v4_t c3 = {
-        .x = a.x0*b.x3 + a.x1*b.y3 + a.x2*b.z3 + a.x3* b.w3,
-        .y = a.y0*b.x3 + a.y1*b.y3 + a.y2*b.z3 + a.y3* b.w3,
-        .z = a.z0*b.x3 + a.z1*b.y3 + a.z2*b.z3 + a.z3* b.w3,
-        .w = a.w0*b.x3 + a.w1*b.y3 + a.w2*b.z3 + a.w3* b.w3,
+        .x = a.x0*b.x3 + a.x1*b.y3 + a.x2*b.z3 + a.x3*b.w3,
+        .y = a.y0*b.x3 + a.y1*b.y3 + a.y2*b.z3 + a.y3*b.w3,
+        .z = a.z0*b.x3 + a.z1*b.y3 + a.z2*b.z3 + a.z3*b.w3,
+        .w = a.w0*b.x3 + a.w1*b.y3 + a.w2*b.z3 + a.w3*b.w3,
 	};
 
     return (m4x4_t){ .c0=c0, .c1=c1, .c2=c2, .c3=c3 };
@@ -878,9 +1090,17 @@ static inline v4_t m4_v4mul(v4_t v, m4x4_t m) {
 
 #ifdef LIN_DOUBLE
 
-#define E_D 2.71828182845904523536
-#define PI_D 3.14159265358979323846
-#define EPSILON_D 2.2204460492503131e-016
+#define LIN_PI      3.14159265358979323846264338327950288
+#define LIN_TAU     6.28318530717958647692528676655900576
+#define LIN_E       2.71828182845904523536
+#define LIN_EPSILON 2.2204460492503131e-016
+
+#define LIN_SQRT_TWO   1.41421356237309504880168872420969808
+#define LIN_SQRT_THREE 1.73205080756887729352744634150587236
+#define LIN_SQRT_FIVE  2.23606797749978969640917366873127623
+
+#define LIN_LN2        0.69314718055994530941723212145817656
+#define LIN_LN10       2.30258509299404568401799145468436421
 
 
 typedef union {
@@ -1048,14 +1268,28 @@ static inline m4x4_d m4d(
 static inline m4x4_d m4dInit(double i);
 
 static inline m4x4_d m4d_identity(void);
-static inline m4x4_d m4d_translation(v3_d offset);
-static inline m4x4_d m4d_scaling(v3_d scale);
+static inline m4x4_d m4d_translation(double x, double y, double z);
+static inline m4x4_d m4dv_translation(v3_d offset);
+static inline m4x4_d m4d_scaling(double x, double y, double z);
+static inline m4x4_d m4dv_scaling(v3_d scale);
 
-static inline m4x4_d m4d_perspective(double fovy, double aratio, double near, double far);
+static inline m4x4_d m4d_xrot(double x);
+static inline m4x4_d m4d_yrot(double y);
+static inline m4x4_d m4d_zrot(double z);
+static inline m4x4_d m4d_perspective(double fovy, double aratio, double near_plane, double far_plane);
 static inline m4x4_d m4d_ortho(
         double left, double right,
         double bottom, double top,
         double back, double front);
+
+// Euler Rotation in order of X-Axis -> Y-Axis -> Z-Axis
+static inline m4x4_d m4d_eulerXYZ(double x, double y, double z);
+// Euler Rotation in order of X-Axis -> Y-Axis -> Z-Axis
+static inline m4x4_d m4dv_eulerXYZ(v3_d angle);
+// Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
+static inline m4x4_d m4d_eulerZYX(double z, double y, double x);
+// Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
+static inline m4x4_d m4dv_eulerZYX(v3_d angle);
 
 static inline m4x4_d m4d_transpose(m4x4_d m);
 static inline m4x4_d m4d_add(m4x4_d a, m4x4_d b);
@@ -1076,9 +1310,7 @@ static inline v4_d m4d_v2mul(v2_d v, m4x4_d m);
 static inline v4_d m4d_v3mul(v3_d v, m4x4_d m);
 static inline v4_d m4d_v4mul(v4_d v, m4x4_d m);
 
-int m4d_print(m4x4_d m);
-int m4d_println(m4x4_d m);
-
+#define LIN_DOUBLE_IMPLEMENTATION
 #ifdef LIN_DOUBLE_IMPLEMENTATION
 
 
@@ -1182,7 +1414,7 @@ static inline double v2d_angle(v2_d a, v2_d b) {
 }
 
 static inline int v2d_isZero(v2_d v) {
-    return v2d_fastmag(v) < EPSILON_D;
+    return v2d_fastmag(v) < LIN_EPSILON;
 }
 
 
@@ -1297,11 +1529,11 @@ static inline double v3d_dot(v3_d a, v3_d b) {
 }
 
 static inline double v3d_angle(v3_d a, v3_d b) {
-    return acosf(v3d_dot(a, b) / (v3d_mag(a) * v3d_mag(b)));
+    return acos(v3d_dot(a, b) / (v3d_mag(a) * v3d_mag(b)));
 }
 
 static inline int v3d_isZero(v3_d v) {
-    return v3d_fastmag(v) < EPSILON_D;
+    return v3d_fastmag(v) < LIN_EPSILON;
 }
 
 
@@ -1424,11 +1656,11 @@ static inline double v4d_dot(v4_d a, v4_d b) {
 }
 
 static inline double v4d_angle(v4_d a, v4_d b) {
-    return acosf(v4d_dot(a, b) / (v4d_mag(a) * v4d_mag(b)));
+    return acos(v4d_dot(a, b) / (v4d_mag(a) * v4d_mag(b)));
 }
 
 static inline int v4_isZero(v4_d v) {
-    return v4d_fastmag(v) < EPSILON_D;
+    return v4d_fastmag(v) < LIN_EPSILON;
 }
 
 
@@ -1502,35 +1734,89 @@ static inline m4x4_d m4d_identity(void) {
     };
 }
 
-static inline m4x4_d m4d_translation(v3_d offset) {
+static inline m4x4_d m4d_translation(double x, double y, double z) {
     return (m4x4_d){
-        .x0=1.0,     .y0=0.0,     .z0=0.0,     .w0=0.0,
-        .x1=0.0,     .y1=1.0,     .z1=0.0,     .w1=0.0,
-        .x2=0.0,     .y2=0.0,     .z2=1.0,     .w2=0.0,
+        .x0=1.0, .y0=0.0, .z0=0.0, .w0=0.0,
+        .x1=0.0, .y1=1.0, .z1=0.0, .w1=0.0,
+        .x2=0.0, .y2=0.0, .z2=1.0, .w2=0.0,
+        .x3=x,   .y3=y,   .z3=z,   .w3=1.0,
+    };
+}
+
+static inline m4x4_d m4dv_translation(v3_d offset) {
+    return (m4x4_d){
+        .x0=1.0,      .y0=0.0,      .z0=0.0,      .w0=0.0,
+        .x1=0.0,      .y1=1.0,      .z1=0.0,      .w1=0.0,
+        .x2=0.0,      .y2=0.0,      .z2=1.0,      .w2=0.0,
         .x3=offset.x, .y3=offset.y, .z3=offset.z, .w3=1.0,
     };
 }
 
-static inline m4x4_d m4d_scaling(v3_d scale) {
+static inline m4x4_d m4d_scaling(double x, double y, double z) {
     return (m4x4_d){
-        .x0=scale.x, .y0=0.0,    .z0=0.0,    .w0=0.0,
-        .x1=0.0,    .y1=scale.y, .z1=0.0,    .w1=0.0,
-        .x2=0.0,    .y2=0.0,    .z2=scale.z, .w2=0.0,
-        .x3=0.0,    .y3=0.0,    .z3=0.0,    .w3=1.0,
+        .x0=x,   .y0=0.0, .z0=0.0, .w0=0.0,
+        .x1=0.0, .y1=y,   .z1=0.0, .w1=0.0,
+        .x2=0.0, .y2=0.0, .z2=z,   .w2=0.0,
+        .x3=0.0, .y3=0.0, .z3=0.0, .w3=1.0,
+    };
+}
+
+static inline m4x4_d m4dv_scaling(v3_d scale) {
+    return (m4x4_d){
+        .x0=scale.x, .y0=0.0,     .z0=0.0,     .w0=0.0,
+        .x1=0.0,     .y1=scale.y, .z1=0.0,     .w1=0.0,
+        .x2=0.0,     .y2=0.0,     .z2=scale.z, .w2=0.0,
+        .x3=0.0,     .y3=0.0,     .z3=0.0,     .w3=1.0,
     };
 }
 
 
-static inline m4x4_d m4_perspective(double fovy, double aratio, double near, double far) {
-    double f = 1.0 / tanf(fovy / 2.0);
+static inline m4x4_d m4d_xrot(double x) {
+    double snx = sin(x);
+    double csx = cos(x);
 
-    m4x4_d result = m4d_scaling((v3_d){
-        .x = f / aratio,
-        .y = f,
-        .z = (far + near) / (near - far),
-    });
+    return (m4x4_d){
+        .x0=1.0, .x1=0.0, .x2= 0.0, .x3=0.0,
+        .y0=0.0, .y1=csx, .y2=-snx, .y3=0.0,
+        .z0=0.0, .z1=snx, .z2= csx, .z3=0.0,
+        .w0=0.0, .w1=0.0, .w2= 0.0, .w3=1.0,
+    };
+}
 
-    result.z3 = (2.0 * far * near) / (near - far);
+static inline m4x4_d m4d_yrot(double y) {
+    double sny = sin(y);
+    double csy = cos(y);
+
+    return (m4x4_d){
+        .x0= csy, .x1=0.0, .x2=sny, .x3=0.0,
+        .y0= 0.0, .y1=1.0, .y2=0.0, .y3=0.0,
+        .z0=-sny, .z1=0.0, .z2=csy, .z3=0.0,
+        .w0= 0.0, .w1=0.0, .w2=0.0, .w3=1.0,
+    };
+}
+
+static inline m4x4_d m4d_zrot(double z) {
+    double snz = sin(z);
+    double csz = cos(z);
+
+    return (m4x4_d){
+        .x0=csz, .x1=-snz, .x2=0.0, .x3=0.0,
+        .y0=snz, .y1= csz, .y2=0.0, .y3=0.0,
+        .z0=0.0, .z1= 0.0, .z2=1.0, .z3=0.0,
+        .w0=0.0, .w1= 0.0, .w2=0.0, .w3=1.0,
+    };
+}
+
+static inline m4x4_d m4d_perspective(double fovy, double aratio, double near_plane, double far_plane) {
+    double f = 1.0 / tan(fovy / 2.0);
+
+    m4x4_d result = m4d_scaling(
+        f / aratio,
+        f,
+        (far_plane + near_plane) / (near_plane - far_plane)
+    );
+
+    result.z3 = (2.0 * far_plane * near_plane) / (near_plane - far_plane);
     result.w2 = -1.0;
 
     return result;
@@ -1541,17 +1827,140 @@ static inline m4x4_d m4d_ortho(
         double bottom, double top,
         double back, double front) {
 
-    m4x4_d result = m4d_scaling((v3_d){
-            .x = 2.0 / (right - left),
-            .y = 2.0 / (top - bottom),
-            .z = 2.0 / (back - front),
-    });
+    m4x4_d result = m4d_scaling(
+            2.0 / (right - left),
+            2.0 / (top - bottom),
+            2.0 / (back - front)
+    );
 
     result.x3 = -(right + left) / (right - left);
     result.y3 = -(top + bottom) / (top - bottom);
     result.z3 = -(back + front) / (back - front);
 
     return result;
+}
+
+
+// Euler Rotation in order of X-Axis -> Y-Axis -> Z-Axis
+static inline m4x4_d m4d_eulerXYZ(double x, double y, double z) {
+    double snx = sin(-x), sny = sin(-y), snz = sin(-z);
+    double csx = cos(-x), csy = cos(-y), csz = cos(-z);
+
+    v4_d c0 = {
+	    .x =  csy * csz,
+	    .y = -csx * snz + snx * sny * csz,
+	    .z =  snx * snz + csx * sny * csz,
+	    .w =  0.0,
+    };
+
+    v4_d c1 = {
+	    .x =  csy * snz,
+	    .y =  csx * csz + snx * sny * snz,
+	    .z = -snx * csz + csx * sny * snz,
+	    .w =  0.0,
+    };
+
+    v4_d c2 = {
+	    .x = -sny,
+	    .y =  snx * csy,
+	    .z =  csx * csy,
+	    .w =  0.0,
+    };
+
+    v4_d c3 = { .x = 0.0, .y = 0.0, .z = 0.0, .w = 1.0 };
+    return (m4x4_d){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+// Euler Rotation in order of X-Axis -> Y-Axis -> Z-Axis
+static inline m4x4_d m4dv_eulerXYZ(v3_d angle) {
+    double snx = sin(-angle.x), sny = sin(-angle.y), snz = sin(-angle.z);
+    double csx = cos(-angle.x), csy = cos(-angle.y), csz = cos(-angle.z);
+
+    v4_d c0 = {
+	    .x =  csy * csz,
+	    .y = -csx * snz + snx * sny * csz,
+	    .z =  snx * snz + csx * sny * csz,
+        .w =  0.0,
+    };
+
+    v4_d c1 = {
+	    .x =  csy * snz,
+	    .y =  csx * csz + snx * sny * snz,
+	    .z = -snx * csz + csx * sny * snz,
+        .w =  0.0,
+    };
+
+    v4_d c2 = {
+	    .x = -sny,
+	    .y =  snx * csy,
+	    .z =  csx * csy,
+        .w =  0.0,
+    };
+
+    v4_d c3 = { .x = 0.0, .y = 0.0, .z = 0.0, .w = 1.0 };
+    return (m4x4_d){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+// Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
+static inline m4x4_d m4d_eulerZYX(double z, double y, double x) {
+    double snx = sin(-x), sny = sin(-y), snz = sin(-z);
+    double csx = cos(-x), csy = cos(-y), csz = cos(-z);
+
+    v4_d c0 = {
+        .x = csz * csy,
+	    .y = csy * snz,
+	    .z =-sny,
+        .w = 0.0,
+    };
+
+    v4_d c1 = {
+	    .x = csz * sny * snx - csx * snz,
+	    .y = csz * csx + snz * sny * snx,
+	    .z = csy * snx,
+        .w = 0.0,
+    };
+
+    v4_d c2 = {
+	    .x = snz * snx + csz * csx * sny,
+	    .y = csx * snz * sny - csz * snx,
+	    .z = csy * csx,
+        .w = 0.0,
+    };
+    
+
+    v4_d c3 = { .x = 0.0, .y = 0.0, .z = 0.0, .w = 1.0 };
+    return (m4x4_d){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+// Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
+static inline m4x4_d m4dv_eulerZYX(v3_d angle) {
+    double snx = sin(-angle.x), sny = sin(-angle.y), snz = sin(-angle.z);
+    double csx = cos(-angle.x), csy = cos(-angle.y), csz = cos(-angle.z);
+
+    v4_d c0 = {
+        .x = csz * csy,
+	    .y = csy * snz,
+	    .z =-sny,
+        .w = 0.0,
+    };
+
+    v4_d c1 = {
+	    .x = csz * sny * snx - csx * snz,
+	    .y = csz * csx + snz * sny * snx,
+	    .z = csy * snx,
+        .w = 0.0,
+    };
+
+    v4_d c2 = {
+	    .x = snz * snx + csz * csx * sny,
+	    .y = csx * snz * sny - csz * snx,
+	    .z = csy * csx,
+        .w = 0.0,
+    };
+    
+
+    v4_d c3 = { .x = 0.0, .y = 0.0, .z = 0.0, .w = 1.0 };
+    return (m4x4_d){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
 }
 
 
@@ -1623,10 +2032,10 @@ static inline m4x4_d m4d_mul(m4x4_d a, m4x4_d b) {
 	};
 
     v4_d c3 = {
-        .x = a.x0*b.x3 + a.x1*b.y3 + a.x2*b.z3 + a.x3* b.w3,
-        .y = a.y0*b.x3 + a.y1*b.y3 + a.y2*b.z3 + a.y3* b.w3,
-        .z = a.z0*b.x3 + a.z1*b.y3 + a.z2*b.z3 + a.z3* b.w3,
-        .w = a.w0*b.x3 + a.w1*b.y3 + a.w2*b.z3 + a.w3* b.w3,
+        .x = a.x0*b.x3 + a.x1*b.y3 + a.x2*b.z3 + a.x3*b.w3,
+        .y = a.y0*b.x3 + a.y1*b.y3 + a.y2*b.z3 + a.y3*b.w3,
+        .z = a.z0*b.x3 + a.z1*b.y3 + a.z2*b.z3 + a.z3*b.w3,
+        .w = a.w0*b.x3 + a.w1*b.y3 + a.w2*b.z3 + a.w3*b.w3,
 	};
 
     return (m4x4_d){ .c0=c0, .c1=c1, .c2=c2, .c3=c3 };
@@ -1643,10 +2052,10 @@ static inline m4x4_d m4d_muls(m4x4_d m, double s) {
 
 static inline m4x4_d m4d_lerp(m4x4_d a, m4x4_d b, double t) {
     return (m4x4_d) {
-        .c0 = v4d_lerp(a.c0, b.c0, t);
-        .c1 = v4d_lerp(a.c1, b.c1, t);
-        .c2 = v4d_lerp(a.c2, b.c2, t);
-        .c3 = v4d_lerp(a.c3, b.c3, t);
+        .c0 = v4d_lerp(a.c0, b.c0, t),
+        .c1 = v4d_lerp(a.c1, b.c1, t),
+        .c2 = v4d_lerp(a.c2, b.c2, t),
+        .c3 = v4d_lerp(a.c3, b.c3, t),
     };
 }
 
