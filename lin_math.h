@@ -44,9 +44,11 @@
 // the matrix "mat", name it whatever.
 // ----------------------------------------------------------------
 
+#ifdef _LIN_DEBUG_INTERNAL_
 #define LIN_MATH3D_IMPLEMENTATION
 #define LIN_DOUBLE
 #define LIN_DOUBLE_IMPLEMENTATION
+#endif
 
 typedef union {
     struct { float x, y; };          // Vector
