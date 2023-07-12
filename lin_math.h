@@ -44,6 +44,10 @@
 // the matrix "mat", name it whatever.
 // ----------------------------------------------------------------
 
+#define LIN_MATH3D_IMPLEMENTATION
+#define LIN_DOUBLE
+#define LIN_DOUBLE_IMPLEMENTATION
+
 typedef union {
     struct { float x, y; };          // Vector
     struct { float u, v; };          // Texture
@@ -90,6 +94,13 @@ typedef union {
     float m[4][4]; // Column Major
 } m4x4_t;
 
+// Helper Functions! These are just useful
+// to have on hand even if they do not use
+// vectors or matrixies
+// ---------------------------------------
+
+static inline float lerpf(float a, float b, float t);
+
 // 2D Vector functions! These are just the
 // decorations
 // ---------------------------------------
@@ -112,6 +123,8 @@ static inline v2_t v2_lerp(v2_t a, v2_t b, float t);
 
 static inline float v2_mag(v2_t v);
 static inline float v2_fastmag(v2_t v);
+static inline float v2_dist(v2_t a, v2_t b);
+static inline float v2_fastdist(v2_t a, v2_t b);
 static inline float v2_dot(v2_t a, v2_t b);
 static inline float v2_angle(v2_t a, v2_t b);
 static inline int v2_isZero(v2_t v);
@@ -144,6 +157,8 @@ static inline v3_t v3_lerp(v3_t a, v3_t b, float t);
 
 static inline float v3_mag(v3_t v);
 static inline float v3_fastmag(v3_t v);
+static inline float v3_dist(v3_t a, v3_t b);
+static inline float v3_fastdist(v3_t a, v3_t b);
 static inline float v3_dot(v3_t a, v3_t b);
 static inline float v3_angle(v3_t a, v3_t b);
 static inline int v3_isZero(v3_t v);
@@ -176,6 +191,8 @@ static inline v4_t v4_lerp(v4_t a, v4_t b, float t);
 
 static inline float v4_mag(v4_t v);
 static inline float v4_fastmag(v4_t v);
+static inline float v4_dist(v4_t a, v4_t b);
+static inline float v4_fastdist(v4_t a, v4_t b);
 static inline float v4_dot(v4_t a, v4_t b);
 static inline float v4_angle(v4_t a, v4_t b);
 static inline int v4_isZero(v4_t v);
@@ -284,6 +301,13 @@ static inline v4_t m4_v4mul(v4_t v, m4x4_t m);
 
 #ifdef LIN_MATH3D_IMPLEMENTATION
 
+// Help Function Implementaions
+// ----------------------------
+
+static inline float lerpf(float a, float b, float t) {
+    return a * (1.0f - t) + b * t;
+}
+
 // 2D Vectors Implementaions
 // -------------------------
 
@@ -373,6 +397,14 @@ static inline float v2_mag(v2_t v) {
 
 static inline float v2_fastmag(v2_t v) {
     return v.x * v.x + v.y * v.y;
+}
+
+static inline float v2_dist(v2_t a, v2_t b) {
+    return v2_mag(v2_sub(a, b));
+}
+
+static inline float v2_fastdist(v2_t a, v2_t b) {
+    return v2_fastmag(v2_sub(a, b));
 }
 
 static inline float v2_dot(v2_t a, v2_t b) {
@@ -492,6 +524,14 @@ static inline float v3_mag(v3_t v) {
 
 static inline float v3_fastmag(v3_t v) {
     return v.x * v.x + v.y * v.y + v.z * v.z;
+}
+
+static inline float v3_dist(v3_t a, v3_t b) {
+    return v3_mag(v3_sub(a, b));
+}
+
+static inline float v3_fastdist(v3_t a, v3_t b) {
+    return v3_fastmag(v3_sub(a, b));
 }
 
 static inline float v3_dot(v3_t a, v3_t b) {
@@ -619,6 +659,14 @@ static inline float v4_mag(v4_t v) {
 
 static inline float v4_fastmag(v4_t v) {
     return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
+}
+
+static inline float v4_dist(v4_t a, v4_t b) {
+    return v4_mag(v4_sub(a, b));
+}
+
+static inline float v4_fastdist(v4_t a, v4_t b) {
+    return v4_fastmag(v4_sub(a, b));
 }
 
 static inline float v4_dot(v4_t a, v4_t b) {
@@ -1149,6 +1197,13 @@ typedef union {
     double data[4][4]; // Column Major
 } m4x4_d;
 
+// Helper Functions! These are just useful
+// to have on hand even if they do not use
+// vectors or matrixies
+// ---------------------------------------
+
+static inline double lerp(double a, double b, double t);
+
 // 2D Vector functions! These are just the
 // decorations
 // ---------------------------------------
@@ -1171,6 +1226,8 @@ static inline v2_d v2d_lerp(v2_d a, v2_d b, double t);
 
 static inline double v2d_mag(v2_d v);
 static inline double v2d_fastmag(v2_d v);
+static inline double v2d_dist(v2_d a, v2_d b);
+static inline double v2d_fastdist(v2_d a, v2_d b);
 static inline double v2d_dot(v2_d a, v2_d b);
 static inline double v2d_angle(v2_d a, v2_d b);
 static inline int v2d_isZero(v2_d v);
@@ -1201,6 +1258,8 @@ static inline v3_d v3d_lerp(v3_d a, v3_d b, double t);
 
 static inline double v3d_mag(v3_d v);
 static inline double v3d_fastmag(v3_d v);
+static inline double v3d_dist(v3_d a, v3_d b);
+static inline double v3d_fastdist(v3_d a, v3_d b);
 static inline double v3d_dot(v3_d a, v3_d b);
 static inline double v3d_angle(v3_d a, v3_d b);
 static inline int v3d_isZero(v3_d v);
@@ -1231,6 +1290,8 @@ static inline v4_d v4d_lerp(v4_d a, v4_d b, double t);
 
 static inline double v4d_mag(v4_d v);
 static inline double v4d_fastmag(v4_d v);
+static inline double v4d_dist(v4_d a, v4_d b);
+static inline double v4d_fastdist(v4_d a, v4_d b);
 static inline double v4d_dot(v4_d a, v4_d b);
 static inline double v4d_angle(v4_d a, v4_d b);
 static inline int v4d_isZero(v4_d v);
@@ -1310,8 +1371,15 @@ static inline v4_d m4d_v2mul(v2_d v, m4x4_d m);
 static inline v4_d m4d_v3mul(v3_d v, m4x4_d m);
 static inline v4_d m4d_v4mul(v4_d v, m4x4_d m);
 
-#define LIN_DOUBLE_IMPLEMENTATION
 #ifdef LIN_DOUBLE_IMPLEMENTATION
+
+
+// Helper Function Implementaions
+// ------------------------------
+
+static inline double lerp(double a, double b, double t) {
+    return a * (1.0 - t) * b * t;
+}
 
 
 // 2D Vectors Implementaions
@@ -1403,6 +1471,14 @@ static inline double v2d_mag(v2_d v) {
 
 static inline double v2d_fastmag(v2_d v) {
     return v.x * v.x + v.y * v.y;
+}
+
+static inline double v2d_dist(v2_d a, v2_d b) {
+    return v2d_mag(v2d_sub(a, b));
+}
+
+static inline double v2d_fastdist(v2_d a, v2_d b) {
+    return v2d_fastmag(v2d_sub(a, b));
 }
 
 static inline double v2d_dot(v2_d a, v2_d b) {
@@ -1522,6 +1598,14 @@ static inline double v3d_mag(v3_d v) {
 
 static inline double v3d_fastmag(v3_d v) {
     return v.x * v.x + v.y * v.y + v.z * v.z;
+}
+
+static inline double v3d_dist(v3_d a, v3_d b) {
+    return v3d_mag(v3d_sub(a, b));
+}
+
+static inline double v3d_fastdist(v3_d a, v3_d b) {
+    return v3d_fastmag(v3d_sub(a, b));
 }
 
 static inline double v3d_dot(v3_d a, v3_d b) {
@@ -1649,6 +1733,14 @@ static inline double v4d_mag(v4_d v) {
 
 static inline double v4d_fastmag(v4_d v) {
     return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
+}
+
+static inline double v4d_dist(v4_d a, v4_d b) {
+    return v4d_mag(v4d_sub(a, b));
+}
+
+static inline double v4d_fastdist(v4_d a, v4_d b) {
+    return v4d_fastmag(v4d_sub(a, b));
 }
 
 static inline double v4d_dot(v4_d a, v4_d b) {
