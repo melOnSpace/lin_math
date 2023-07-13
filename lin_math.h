@@ -312,6 +312,9 @@ static inline m4x4_t m4v_eulerZYX(v3_t angle);
 static inline m4x4_t m4_axis(float x, float y, float z, float angle);
 static inline m4x4_t m4v_axis(v4_t axis);
 
+static inline m4x4_t m4_quaternion(float r, float i, float j, float k);
+static inline m4x4_t m4v_quaternion(qt_t q);
+
 static inline m4x4_t m4_transpose(m4x4_t m);
 static inline m4x4_t m4_add(m4x4_t a, m4x4_t b);
 static inline m4x4_t m4_adds(m4x4_t m, float s);
@@ -1270,23 +1273,78 @@ static inline m4x4_t m4v_axis(v4_t axis) {
         .x = csa + (axis.x * axis.x) * (1.0f - csa),
         .y = axis.y * axis.x * (1.0f - csa) + axis.z * sna,
         .z = axis.z * axis.x * (1.0f - csa) - axis.y * sna,
+        .w = 0.0f,
 	};
 
     v4_t c1 = (v4_t){
         .x = axis.x * axis.y * (1.0f - csa) - axis.z * sna,
         .y = csa + (axis.y * axis.y) * (1.0f - csa),
         .z = axis.z * axis.y * (1.0f - csa) + axis.x * sna,
+        .w = 0.0f,
 	};
 
     v4_t c2 = (v4_t){
         .x = axis.x * axis.z * (1.0f - csa) + axis.y * sna,
         .y = axis.y * axis.z * (1.0f - csa) - axis.x * sna,
         .z = csa + (axis.z * axis.z) * (1.0f - csa),
+        .w = 0.0f,
 	};
 
 
     v4_t c3 = { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
     return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+static inline m4x4_t m4_quaternion(float r, float i, float j, float k) {
+    v4_t c0 = {
+        .x = 1.0f - 2.0f * (i * i + j * j),
+        .y = 2.0f * (r * i + k * j),
+        .z = 2.0f * (r * j - k * i),
+        .w = 0.0f,
+    };
+
+    v4_t c1 = {
+        .x = 2.0f * (r * i - k * j),
+        .y = 1.0f - 2.0f * (r * r + j * j),
+        .z = 2.0f * (i * j + k * r),
+        .w = 0.0f,
+    };
+
+    v4_t c2 = {
+        .x = 2.0f * (r * j + k * i),
+        .y = 2.0f * (i * j - k * r),
+        .z = 1.0f - 2.0f * (r * r + i * i),
+        .w = 0.0f,
+    };
+
+    v4_t c3 = { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
+	return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+static inline m4x4_t m4v_quaternion(qt_t q) {
+    v4_t c0 = {
+        .x = 1.0f - 2.0f * (q.i * q.i + q.j * q.j),
+        .y = 2.0f * (q.r * q.i + q.k * q.j),
+        .z = 2.0f * (q.r * q.j - q.k * q.i),
+        .w = 0.0f,
+    };
+
+    v4_t c1 = {
+        .x = 2.0f * (q.r * q.i - q.k * q.j),
+        .y = 1.0f - 2.0f * (q.r * q.r + q.j * q.j),
+        .z = 2.0f * (q.i * q.j + q.k * q.r),
+        .w = 0.0f,
+    };
+
+    v4_t c2 = {
+        .x = 2.0f * (q.r * q.j + q.k * q.i),
+        .y = 2.0f * (q.i * q.j - q.k * q.r),
+        .z = 1.0f - 2.0f * (q.r * q.r + q.i * q.i),
+        .w = 0.0f,
+    };
+
+    v4_t c3 = { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
+	return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
 }
 
 
