@@ -51,6 +51,8 @@
 #define LIN_DOUBLE_IMPLEMENTATION
 #endif
 
+#define _packed_ __attribute__((__packed__))
+
 typedef union {
     struct { float x, y; };          // Vector
     struct { float u, v; };          // Texture
@@ -74,16 +76,24 @@ typedef union {
 } v3_t;
 
 typedef union {
-    struct { float x, y, z, w; };                 // Vector
-    struct { float u, v, t, s; };                 // Texture (4D textures?)
-    struct { float r, g, b, a; };                 // Color
-    struct { float real, i, j, k; };              // Quaternion (imaginary)
-    struct { float width, height, depth, time; }; // 4D Sizes ¯\_(ツ)_/¯
-    struct { v3_t axis; float angle; };           // Axis Angle
+    struct _packed_ { float x, y, z, w; };                 // Vector
+    struct _packed_ { float u, v, t, s; };                 // Texture (4D textures?)
+    struct _packed_ { float r, g, b, a; };                 // Color
+    struct _packed_ { float real, i, j, k; };              // Quaternion (imaginary)
+    struct _packed_ { float width, height, depth, time; }; // 4D Sizes ¯\_(ツ)_/¯
+    struct _packed_ { v3_t axis; float angle; };           // Axis Angle
 
     v2_t v2; v3_t v3; // Cast down
     float data[4];    // Raw Data
 } v4_t;
+
+typedef union {
+    struct _packed_ { float r, i, j, k; };
+    struct _packed_ { float w; v3_t v; };
+
+    v4_t v4;
+    float data[4];
+} qt_t;
 
 typedef union {
     struct { v4_t c0, c1, c2, c3; };
@@ -132,9 +142,9 @@ static inline float v2_dot(v2_t a, v2_t b);
 static inline float v2_angle(v2_t a, v2_t b);
 static inline int v2_isZero(v2_t v);
 
-// Prints a vector. Workds with both v2_t & v2_d
+// Prints a vector. Works with both v2_t & v2_d
 #define v2_print(v) (printf("[%f, %f]", (v).x, (v).y))
-// Prints a vector. Workds with both v2_t & v2_d
+// Prints a vector. Works with both v2_t & v2_d
 #define v2_println(v) (printf("[%f, %f]\n", (v).x, (v).y))
 
 // 3D Vector functions! These are just the
@@ -166,9 +176,9 @@ static inline float v3_dot(v3_t a, v3_t b);
 static inline float v3_angle(v3_t a, v3_t b);
 static inline int v3_isZero(v3_t v);
 
-// Prints a vector. Workds with both v3_t & v3_d
+// Prints a vector. Works with both v3_t & v3_d
 #define v3_print(v) (printf("[%f, %f, %f]", (v).x, (v).y, (v).z))
-// Prints a vector. Workds with both v3_t & v3_d
+// Prints a vector. Works with both v3_t & v3_d
 #define v3_println(v) (printf("[%f, %f, %f]\n", (v).x, (v).y, (v).z))
 
 // 4D Vector functions! These are just the
@@ -200,10 +210,54 @@ static inline float v4_dot(v4_t a, v4_t b);
 static inline float v4_angle(v4_t a, v4_t b);
 static inline int v4_isZero(v4_t v);
 
-// Prints a vector. Workds with both v4_t & v4_d
+// Prints a vector. Works with both v4_t & v4_d
 #define v4_print(v) (printf("[%f, %f, %f, %f]", (v).x, (v).y, (v).z, (v).w))
-// Prints a vector. Workds with both v4_t & v4_d 
+// Prints a vector. Works with both v4_t & v4_d 
 #define v4_println(v) (printf("[%f, %f, %f, %f]\n", (v).x, (v).y, (v).z, (v).w))
+
+// Quaternion functions! These are just the
+// decorations
+// ---------------------------------------
+
+static inline qt_t qt(float r, float i, float j, float k);
+static inline qt_t qtInit(float i);
+
+static inline qt_t qt_identity(void);
+static inline qt_t qt_axis(float x, float y, float z, float angle);
+static inline qt_t qtv_axis(v4_t axis);
+
+static inline qt_t qt_add(qt_t a, qt_t b);
+static inline qt_t qt_adds(qt_t q, float s);
+static inline qt_t qt_sub(qt_t a, qt_t b);
+static inline qt_t qt_subs(qt_t q, float s);
+static inline qt_t qt_mul(qt_t a, qt_t b);
+static inline qt_t qt_muls(qt_t q, float s);
+static inline qt_t qt_divs(qt_t q, float s);
+
+static inline qt_t qt_sqrt(qt_t q);
+static inline qt_t qt_exp(qt_t q);
+static inline qt_t qt_ln(qt_t q);
+static inline qt_t qt_pows(qt_t q, float s);
+
+static inline qt_t qt_conjugate(qt_t q);
+static inline qt_t qt_inverse(qt_t q);
+static inline qt_t qt_cross(qt_t a, qt_t b);
+static inline qt_t qt_norm(qt_t q);
+static inline qt_t qt_lerp(qt_t a, qt_t b, float t);
+static inline qt_t qt_slerp(qt_t a, qt_t b, float t);
+
+static inline float qt_mag(qt_t q);
+static inline float qt_fastmag(qt_t q);
+static inline float qt_geonorm(qt_t a, qt_t b); // Geodesic Distance
+static inline float qt_dot(qt_t a, qt_t b);
+static inline int qt_isZero(qt_t q);
+static inline int qt_isUnit(qt_t q);
+static inline int qt_isIdentity(qt_t q);
+
+// Prints a quaternion. Works with both qt_t & qt_d
+#define qt_print(v) (printf("[%f, %fi, %fj, %fk]", (v).x, (v).y, (v).z, (v).w))
+// Prints a quaternion. Works with both qt_t & qt_d 
+#define qt_println(v) (printf("[%f, %fi, %fj, %fk]\n", (v).x, (v).y, (v).z, (v).w))
 
 // Casting vectors to other vector types <3
 // These will all cast one type to another. Data can
@@ -284,7 +338,7 @@ static inline v4_t m4_v4mul(v4_t v, m4x4_t m);
 .z0=%f .z1=%f .z2=%f .z3=%f\n\
 .w0=%f .w1=%f .w2=%f .w3=%f\n"
 
-// Prints a matrix. Workds with both m4x4_t & m4x4_d
+// Prints a matrix. Works with both m4x4_t & m4x4_d
 #define m4_println(m) (printf(MATRIX_PRINT_STR, \
             (m).x0, (m).x1, (m).x2, (m).x3,\
             (m).y0, (m).y1, (m).y2, (m).y3,\
@@ -297,7 +351,7 @@ static inline v4_t m4_v4mul(v4_t v, m4x4_t m);
 \033[33m.z0=\033[0m%f \033[33m.z1=\033[0m%f \033[33m.z2=\033[0m%f \033[33m.z3=\033[0m%f\n\
 \033[33m.w0=\033[0m%f \033[33m.w1=\033[0m%f \033[33m.w2=\033[0m%f \033[33m.w3=\033[0m%f\n"
 
-// Prints a matrix but with color. Workds with both m4x4_t & m4x4_d
+// Prints a matrix but with color. Works with both m4x4_t & m4x4_d
 #define m4_printc(m) (printf(MATRIX_PRINT_COLOR, \
             (m).x0, (m).x1, (m).x2, (m).x3,\
             (m).y0, (m).y1, (m).y2, (m).y3,\
@@ -328,57 +382,57 @@ static inline v2_t v2Init(float i) {
 
 static inline v2_t v2_add(v2_t a, v2_t b) {
     return (v2_t){
-        .x=(a.x + b.x),
-        .y=(a.y + b.y),
+        .x = a.x + b.x,
+        .y = a.y + b.y,
     };
 }
 
 static inline v2_t v2_adds(v2_t v, float s) {
     return (v2_t){
-        .x=(v.x + s),
-        .y=(v.y + s),
+        .x = v.x + s,
+        .y = v.y + s,
     };
 }
 
 static inline v2_t v2_sub(v2_t a, v2_t b) {
     return (v2_t){
-        .x=(a.x - b.x),
-        .y=(a.y - b.y),
+        .x = a.x - b.x,
+        .y = a.y - b.y,
     };
 }
 
 static inline v2_t v2_subs(v2_t v, float s) {
     return (v2_t){
-        .x=(v.x - s),
-        .y=(v.y - s),
+        .x = v.x - s,
+        .y = v.y - s,
     };
 }
 
 static inline v2_t v2_mul(v2_t a, v2_t b) {
     return (v2_t){
-        .x=(a.x * b.x),
-        .y=(a.y * b.y),
+        .x = a.x * b.x,
+        .y = a.y * b.y,
     };
 }
 
 static inline v2_t v2_muls(v2_t v, float s) {
     return (v2_t){
-        .x=(v.x * s),
-        .y=(v.y * s),
+        .x = v.x * s,
+        .y = v.y * s,
     };
 }
 
 static inline v2_t v2_div(v2_t a, v2_t b) {
     return (v2_t){
-        .x=(a.x / b.x),
-        .y=(a.y / b.y),
+        .x = a.x / b.x,
+        .y = a.y / b.y,
     };
 }
 
 static inline v2_t v2_divs(v2_t v, float s) {
     return (v2_t){
-        .x=(v.x / s),
-        .y=(v.y / s),
+        .x = v.x / s,
+        .y = v.y / s,
     };
 }
 
@@ -440,73 +494,73 @@ static inline v3_t v3Init(float i) {
 
 static inline v3_t v3_add(v3_t a, v3_t b) {
     return (v3_t){
-        .x=(a.x + b.x),
-        .y=(a.y + b.y),
-        .z=(a.z + b.z),
+        .x = a.x + b.x,
+        .y = a.y + b.y,
+        .z = a.z + b.z,
     };
 }
 
 static inline v3_t v3_adds(v3_t v, float s) {
     return (v3_t){
-        .x=(v.x + s),
-        .y=(v.y + s),
-        .z=(v.z + s),
+        .x = v.x + s,
+        .y = v.y + s,
+        .z = v.z + s,
     };
 }
 
 static inline v3_t v3_sub(v3_t a, v3_t b) {
     return (v3_t){
-        .x=(a.x - b.x),
-        .y=(a.y - b.y),
-        .z=(a.z - b.z),
+        .x = a.x - b.x,
+        .y = a.y - b.y,
+        .z = a.z - b.z,
     };
 }
 
 static inline v3_t v3_subs(v3_t v, float s) {
     return (v3_t){
-        .x=(v.x - s),
-        .y=(v.y - s),
-        .z=(v.z - s),
+        .x = v.x - s,
+        .y = v.y - s,
+        .z = v.z - s,
     };
 }
 
 static inline v3_t v3_mul(v3_t a, v3_t b) {
     return (v3_t){
-        .x=(a.x * b.x),
-        .y=(a.y * b.y),
-        .z=(a.z * b.z),
+        .x = a.x * b.x,
+        .y = a.y * b.y,
+        .z = a.z * b.z,
     };
 }
 
 static inline v3_t v3_muls(v3_t v, float s) {
     return (v3_t){
-        .x=(v.x * s),
-        .y=(v.y * s),
-        .z=(v.z * s),
+        .x = v.x * s,
+        .y = v.y * s,
+        .z = v.z * s,
     };
 }
 
 static inline v3_t v3_div(v3_t a, v3_t b) {
     return (v3_t){
-        .x=(a.x / b.x),
-        .y=(a.y / b.y),
-        .z=(a.z / b.z),
+        .x = a.x / b.x,
+        .y = a.y / b.y,
+        .z = a.z / b.z,
     };
 }
 
 static inline v3_t v3_divs(v3_t v, float s) {
     return (v3_t){
-        .x=(v.x / s),
-        .y=(v.y / s),
-        .z=(v.z / s),
+        .x = v.x / s,
+        .y = v.y / s,
+        .z = v.z / s,
     };
 }
 
 static inline v3_t v3_cross(v3_t a, v3_t b) {
     return (v3_t){
-        .x = (a.y * b.z) - (a.z * b.y),
-        .y = (a.z * b.x) - (a.x * b.z),
-        .z = (a.x * b.y) - (a.y * b.x),
+        .x = a.y * b.z - a.z * b.y,
+        .y = a.z * b.x - a.x * b.z,
+        .z = a.x * b.y - a.y * b.x,
     };
 }
 
@@ -567,73 +621,73 @@ static inline v4_t v4Init(float i) {
 
 static inline v4_t v4_add(v4_t a, v4_t b) {
     return (v4_t){
-        .x=(a.x + b.x),
-        .y=(a.y + b.y),
-        .z=(a.z + b.z),
-        .w=(a.w + b.w),
+        .x = a.x + b.x,
+        .y = a.y + b.y,
+        .z = a.z + b.z,
+        .w = a.w + b.w,
     };
 }
 
 static inline v4_t v4_adds(v4_t v, float s) {
     return (v4_t){
-        .x=(v.x + s),
-        .y=(v.y + s),
-        .z=(v.z + s),
-        .w=(v.w + s),
+        .x = v.x + s,
+        .y = v.y + s,
+        .z = v.z + s,
+        .w = v.w + s,
     };
 }
 
 static inline v4_t v4_sub(v4_t a, v4_t b) {
     return (v4_t){
-        .x=(a.x - b.x),
-        .y=(a.y - b.y),
-        .z=(a.z - b.z),
-        .w=(a.w - b.w),
+        .x = a.x - b.x,
+        .y = a.y - b.y,
+        .z = a.z - b.z,
+        .w = a.w - b.w,
     };
 }
 
 static inline v4_t v4_subs(v4_t v, float s) {
     return (v4_t){
-        .x=(v.x - s),
-        .y=(v.y - s),
-        .z=(v.z - s),
-        .w=(v.w - s),
+        .x = v.x - s,
+        .y = v.y - s,
+        .z = v.z - s,
+        .w = v.w - s,
     };
 }
 
 static inline v4_t v4_mul(v4_t a, v4_t b) {
     return (v4_t){
-        .x=(a.x * b.x),
-        .y=(a.y * b.y),
-        .z=(a.z * b.z),
-        .w=(a.w * b.w),
+        .x = a.x * b.x,
+        .y = a.y * b.y,
+        .z = a.z * b.z,
+        .w = a.w * b.w,
     };
 }
 
 static inline v4_t v4_muls(v4_t v, float s) {
     return (v4_t){
-        .x=(v.x * s),
-        .y=(v.y * s),
-        .z=(v.z * s),
-        .w=(v.w * s),
+        .x = v.x * s,
+        .y = v.y * s,
+        .z = v.z * s,
+        .w = v.w * s,
     };
 }
 
 static inline v4_t v4_div(v4_t a, v4_t b) {
     return (v4_t){
-        .x=(a.x / b.x),
-        .y=(a.y / b.y),
-        .z=(a.z / b.z),
-        .w=(a.w / b.w),
+        .x = a.x / b.x,
+        .y = a.y / b.y,
+        .z = a.z / b.z,
+        .w = a.w / b.w,
     };
 }
 
 static inline v4_t v4_divs(v4_t v, float s) {
     return (v4_t){
-        .x=(v.x / s),
-        .y=(v.y / s),
-        .z=(v.z / s),
-        .w=(v.w / s),
+        .x = v.x / s,
+        .y = v.y / s,
+        .z = v.z / s,
+        .w = v.w / s,
     };
 }
 
@@ -687,6 +741,205 @@ static inline int v4_isZero(v4_t v) {
     return v4_fastmag(v) < LIN_EPSILON_F;
 }
 
+
+// Quaternion Implementaions
+// -------------------------
+
+static inline qt_t qt(float r, float i, float j, float k) {
+    return (qt_t){ .r = r, .i = i, .j = j, .k = k };
+}
+
+static inline qt_t qtInit(float i) {
+    return (qt_t){ .r = i, .i = i, .j = i, .k = i };
+}
+
+
+static inline qt_t qt_identity(void) {
+    return (qt_t){ .r = 1.0f, .i = 0.0f, .j = 0.0f, .k = 0.0f };
+}
+
+static inline qt_t qt_axis(float x, float y, float z, float angle) {
+    float sna = sinf(angle);
+    return (qt_t){
+        .r = cosf(angle),
+        .i = x * sna,
+        .j = y * sna,
+        .k = z * sna,
+    };
+}
+
+static inline qt_t qtv_axis(v4_t axis) {
+    float sna = sinf(axis.angle);
+    return (qt_t){
+        .r = cosf(axis.angle),
+        .i = axis.x * sna,
+        .j = axis.y * sna,
+        .k = axis.z * sna,
+    };
+}
+
+
+static inline qt_t qt_add(qt_t a, qt_t b) {
+    return (qt_t){
+        .r = a.r + b.r,
+        .i = a.i + b.i,
+        .j = a.j + b.j,
+        .k = a.k + b.k,
+    };
+}
+
+static inline qt_t qt_adds(qt_t q, float s) {
+    return (qt_t){
+        .r = q.r + s,
+        .i = q.i + s,
+        .j = q.j + s,
+        .k = q.k + s,
+    };
+}
+
+static inline qt_t qt_sub(qt_t a, qt_t b) {
+    return (qt_t){
+        .r = a.r - b.r,
+        .i = a.i - b.i,
+        .j = a.j - b.j,
+        .k = a.k - b.k,
+    };
+}
+
+static inline qt_t qt_subs(qt_t q, float s) {
+    return (qt_t){
+        .r = q.r - s,
+        .i = q.i - s,
+        .j = q.j - s,
+        .k = q.k - s,
+    };
+}
+
+static inline qt_t qt_mul(qt_t a, qt_t b) {
+    float r = (a.r * b.r) - (a.i * b.i) - (a.j * b.j) - (a.k * b.k);
+    float i = (a.r * b.i) + (a.i * b.r) - (a.j * b.k) + (a.k * b.j);
+    float j = (a.r * b.j) + (a.i * b.k) + (a.j * b.r) - (a.k * b.i);
+    float k = (a.r * b.k) - (a.i * b.j) + (a.j * b.i) + (a.k * b.r);
+    
+    return (qt_t){ .r = r, .i = i, .j = j, .k = k };
+}
+
+static inline qt_t qt_muls(qt_t q, float s) {
+    return (qt_t){
+        .r = q.r * s,
+        .i = q.i * s,
+        .j = q.j * s,
+        .k = q.k * s,
+    };
+}
+
+static inline qt_t qt_divs(qt_t q, float s) {
+    return (qt_t){
+        .r = q.r / s,
+        .i = q.i / s,
+        .j = q.j / s,
+        .k = q.k / s,
+    };
+}
+
+static inline qt_t qt_sqrt(qt_t q) {
+    float qmag = sqrtf(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+
+    float r = sqrtf((qmag + q.r) / 2.0f);
+    v3_t v = v3_muls(v3_norm(q.v), (qmag - q.r) / 2.0f);
+    return (qt_t){ .r = r, .v = v };
+}
+
+static inline qt_t qt_exp(qt_t q) {
+    float vmag = v3_mag(q.v);
+    
+    float r = powf(LIN_E_F, q.r) * cosf(vmag);
+    v3_t v = v3_muls(v3_divs(q.v, vmag), sinf(vmag));
+    return (qt_t){ .r = r, .v = v };
+}
+
+static inline qt_t qt_ln(qt_t q) {
+    float qmag = sqrtf(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+
+    float r = logf(qmag);
+    v3_t v = v3_muls(v3_norm(q.v), acosf(q.r / qmag));
+    return (qt_t){ .r = r, .v = v };
+}
+
+static inline qt_t qt_pows(qt_t q, float s) {
+    return qt_exp(qt_muls(qt_ln(q), s));
+}
+
+
+static inline qt_t qt_conjugate(qt_t q) {
+    return (qt_t){ .r = q.r, .i = -q.i, .j = -q.j, .k = -q.k };
+}
+
+static inline qt_t qt_inverse(qt_t q) {
+    float qmag = q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k;
+    return (qt_t){
+        .r=( q.r / qmag),
+        .i=(-q.i / qmag),
+        .j=(-q.j / qmag),
+        .k=(-q.k / qmag),
+    };
+}
+
+static inline qt_t qt_cross(qt_t a, qt_t b) {
+    return (qt_t){
+        .r = 0.0f,
+        .i = a.j * b.k - a.k * b.j,
+        .j = a.k * b.j - a.i * b.k,
+        .k = a.i * b.j - a.j * b.i,
+    };
+}
+
+static inline qt_t qt_norm(qt_t q) {
+    float qmag = sqrtf(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+    return (qt_t){
+        .r = q.r / qmag,
+        .i = q.i / qmag,
+        .j = q.j / qmag,
+        .k = q.k / qmag,
+    };
+}
+
+static inline qt_t qt_lerp(qt_t a, qt_t b, float t) {
+    return qt_add(qt_muls(a, 1.0f - t), qt_muls(b, t));
+}
+
+static inline qt_t qt_slerp(qt_t a, qt_t b, float t) {
+    return qt_mul(a, qt_pows(qt_mul(qt_inverse(a), b), t));
+}
+
+
+static inline float qt_mag(qt_t q) {
+    return sqrtf(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+}
+
+static inline float qt_fastmag(qt_t q) {
+    return q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k;
+}
+
+static inline float qt_geonorm(qt_t a, qt_t b) {
+    return qt_mag(qt_ln(qt_mul(qt_inverse(a), b)));
+}
+
+static inline float qt_dot(qt_t a, qt_t b) {
+    return a.r * b.r + a.i * b.i + a.j * b.j + a.k * b.k;
+}
+
+static inline int qt_isZero(qt_t q) {
+    return qt_fastmag(q) < LIN_EPSILON_F;
+}
+
+static inline int qt_isUnit(qt_t q) {
+    return (qt_fastmag(q) - 1.0f) < LIN_EPSILON_F;
+}
+
+static inline int qt_isIdentity(qt_t q) {
+    return (q.r - 1.0f) < LIN_EPSILON_F && v3_isZero(q.v);
+}
 
 
 // Vector Casting Implementaions
@@ -1243,6 +1496,14 @@ typedef union {
 } v4_d;
 
 typedef union {
+    struct _packed_ { double r, i, j, k; };
+    struct _packed_ { double w; v3_d v; };
+
+    v4_d v4;
+    double data[4];
+} qt_d;
+
+typedef union {
     struct { v4_d c0, c1, c2, c3; };
     struct {
         double x0, y0, z0, w0;
@@ -1289,9 +1550,6 @@ static inline double v2d_dot(v2_d a, v2_d b);
 static inline double v2d_angle(v2_d a, v2_d b);
 static inline int v2d_isZero(v2_d v);
 
-int v2d_print(v2_d v);
-int v2d_println(v2_d v);
-
 // 3D Vector functions! These are just the
 // decorations
 // ---------------------------------------
@@ -1320,9 +1578,6 @@ static inline double v3d_fastdist(v3_d a, v3_d b);
 static inline double v3d_dot(v3_d a, v3_d b);
 static inline double v3d_angle(v3_d a, v3_d b);
 static inline int v3d_isZero(v3_d v);
-
-int v3d_print(v3_d v);
-int v3d_println(v3_d v);
 
 // 4D Vector functions! These are just the
 // decorations
@@ -1353,8 +1608,44 @@ static inline double v4d_dot(v4_d a, v4_d b);
 static inline double v4d_angle(v4_d a, v4_d b);
 static inline int v4d_isZero(v4_d v);
 
-int v4d_print(v4_d v);
-int v4d_println(v4_d v);
+// Quaternion functions! These are just the
+// decorations
+// ---------------------------------------
+
+static inline qt_d qtd(double r, double i, double j, double k);
+static inline qt_d qtdInit(double i);
+
+static inline qt_d qtd_identity(void);
+static inline qt_d qtd_axis(double x, double y, double z, double angle);
+static inline qt_d qtdv_axis(v4_d axis);
+
+static inline qt_d qtd_add(qt_d a, qt_d b);
+static inline qt_d qtd_adds(qt_d q, double s);
+static inline qt_d qtd_sub(qt_d a, qt_d b);
+static inline qt_d qtd_subs(qt_d q, double s);
+static inline qt_d qtd_mul(qt_d a, qt_d b);
+static inline qt_d qtd_muls(qt_d q, double s);
+static inline qt_d qtd_divs(qt_d q, double s);
+
+static inline qt_d qtd_sqrt(qt_d q);
+static inline qt_d qtd_exp(qt_d q);
+static inline qt_d qtd_ln(qt_d q);
+static inline qt_d qtd_pows(qt_d q, double s);
+
+static inline qt_d qtd_conjugate(qt_d q);
+static inline qt_d qtd_inverse(qt_d q);
+static inline qt_d qtd_cross(qt_d a, qt_d b);
+static inline qt_d qtd_norm(qt_d q);
+static inline qt_d qtd_lerp(qt_d a, qt_d b, double t);
+static inline qt_d qtd_slerp(qt_d a, qt_d b, double t);
+
+static inline double qtd_mag(qt_d q);
+static inline double qtd_fastmag(qt_d q);
+static inline double qtd_geonorm(qt_d a, qt_d b); // Geodesic Distance
+static inline double qtd_dot(qt_d a, qt_d b);
+static inline int qtd_isZero(qt_d q);
+static inline int qtd_isUnit(qt_d q);
+static inline int qtd_isIdentity(qt_d q);
 
 // Casting vectors to other vector types <3
 // These will all cast one type to another. Data can
@@ -1811,10 +2102,209 @@ static inline double v4d_angle(v4_d a, v4_d b) {
     return acos(v4d_dot(a, b) / (v4d_mag(a) * v4d_mag(b)));
 }
 
-static inline int v4_isZero(v4_d v) {
+static inline int v4d_isZero(v4_d v) {
     return v4d_fastmag(v) < LIN_EPSILON;
 }
 
+
+// Quaternion Implementaions
+// -------------------------
+
+static inline qt_d qtd(double r, double i, double j, double k) {
+    return (qt_d){ .r = r, .i = i, .j = j, .k = k };
+}
+
+static inline qt_d qtdInit(double i) {
+    return (qt_d){ .r = i, .i = i, .j = i, .k = i };
+}
+
+
+static inline qt_d qtd_identity(void) {
+    return (qt_d){ .r = 1.0, .i = 0.0, .j = 0.0, .k = 0.0 };
+}
+
+static inline qt_d qtd_axis(double x, double y, double z, double angle) {
+    double sna = sin(angle);
+    return (qt_d){
+        .r = cos(angle),
+        .i = x * sna,
+        .j = y * sna,
+        .k = z * sna,
+    };
+}
+
+static inline qt_d qtdv_axis(v4_d axis) {
+    double sna = sin(axis.angle);
+    return (qt_d){
+        .r = cos(axis.angle),
+        .i = axis.x * sna,
+        .j = axis.y * sna,
+        .k = axis.z * sna,
+    };
+}
+
+
+static inline qt_d qtd_add(qt_d a, qt_d b) {
+    return (qt_d){
+        .r = a.r + b.r,
+        .i = a.i + b.i,
+        .j = a.j + b.j,
+        .k = a.k + b.k,
+    };
+}
+
+static inline qt_d qtd_adds(qt_d q, double s) {
+    return (qt_d){
+        .r = q.r + s,
+        .i = q.i + s,
+        .j = q.j + s,
+        .k = q.k + s,
+    };
+}
+
+static inline qt_d qtd_sub(qt_d a, qt_d b) {
+    return (qt_d){
+        .r = a.r - b.r,
+        .i = a.i - b.i,
+        .j = a.j - b.j,
+        .k = a.k - b.k,
+    };
+}
+
+static inline qt_d qtd_subs(qt_d q, double s) {
+    return (qt_d){
+        .r = q.r - s,
+        .i = q.i - s,
+        .j = q.j - s,
+        .k = q.k - s,
+    };
+}
+
+static inline qt_d qtd_mul(qt_d a, qt_d b) {
+    double r = (a.r * b.r) - (a.i * b.i) - (a.j * b.j) - (a.k * b.k);
+    double i = (a.r * b.i) + (a.i * b.r) - (a.j * b.k) + (a.k * b.j);
+    double j = (a.r * b.j) + (a.i * b.k) + (a.j * b.r) - (a.k * b.i);
+    double k = (a.r * b.k) - (a.i * b.j) + (a.j * b.i) + (a.k * b.r);
+    
+    return (qt_d){ .r = r, .i = i, .j = j, .k = k };
+}
+
+static inline qt_d qtd_muls(qt_d q, double s) {
+    return (qt_d){
+        .r = q.r * s,
+        .i = q.i * s,
+        .j = q.j * s,
+        .k = q.k * s,
+    };
+}
+
+static inline qt_d qtd_divs(qt_d q, double s) {
+    return (qt_d){
+        .r = q.r / s,
+        .i = q.i / s,
+        .j = q.j / s,
+        .k = q.k / s,
+    };
+}
+
+static inline qt_d qtd_sqrt(qt_d q) {
+    double qmag = sqrt(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+
+    double r = sqrt((qmag + q.r) / 2.0);
+    v3_d v = v3d_muls(v3d_norm(q.v), (qmag - q.r) / 2.0);
+    return (qt_d){ .r = r, .v = v };
+}
+
+static inline qt_d qtd_exp(qt_d q) {
+    double vmag = v3d_mag(q.v);
+    
+    double r = pow(LIN_E_F, q.r) * cos(vmag);
+    v3_d v = v3d_muls(v3d_divs(q.v, vmag), sin(vmag));
+    return (qt_d){ .r = r, .v = v };
+}
+
+static inline qt_d qtd_ln(qt_d q) {
+    double qmag = sqrt(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+
+    double r = log(qmag);
+    v3_d v = v3d_muls(v3d_norm(q.v), acos(q.r / qmag));
+    return (qt_d){ .r = r, .v = v };
+}
+
+static inline qt_d qtd_pows(qt_d q, double s) {
+    return qtd_exp(qtd_muls(qtd_ln(q), s));
+}
+
+
+static inline qt_d qtd_conjugate(qt_d q) {
+    return (qt_d){ .r = q.r, .i = -q.i, .j = -q.j, .k = -q.k };
+}
+
+static inline qt_d qtd_inverse(qt_d q) {
+    double qmag = q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k;
+    return (qt_d){
+        .r=( q.r / qmag),
+        .i=(-q.i / qmag),
+        .j=(-q.j / qmag),
+        .k=(-q.k / qmag),
+    };
+}
+
+static inline qt_d qtd_cross(qt_d a, qt_d b) {
+    return (qt_d){
+        .r = 0.0,
+        .i = a.j * b.k - a.k * b.j,
+        .j = a.k * b.j - a.i * b.k,
+        .k = a.i * b.j - a.j * b.i,
+    };
+}
+
+static inline qt_d qtd_norm(qt_d q) {
+    double qmag = sqrt(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+    return (qt_d){
+        .r = q.r / qmag,
+        .i = q.i / qmag,
+        .j = q.j / qmag,
+        .k = q.k / qmag,
+    };
+}
+
+static inline qt_d qtd_lerp(qt_d a, qt_d b, double t) {
+    return qtd_add(qtd_muls(a, 1.0 - t), qtd_muls(b, t));
+}
+
+static inline qt_d qtd_slerp(qt_d a, qt_d b, double t) {
+    return qtd_mul(a, qtd_pows(qtd_mul(qtd_inverse(a), b), t));
+}
+
+
+static inline double qtd_mag(qt_d q) {
+    return sqrt(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+}
+
+static inline double qtd_fastmag(qt_d q) {
+    return q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k;
+}
+
+static inline double qtd_geonorm(qt_d a, qt_d b) {
+    return qtd_mag(qtd_ln(qtd_mul(qtd_inverse(a), b)));
+}
+
+static inline double qtd_dot(qt_d a, qt_d b) {
+    return a.r * b.r + a.i * b.i + a.j * b.j + a.k * b.k;
+}
+
+static inline int qtd_isZero(qt_d q) {
+    return qtd_fastmag(q) < LIN_EPSILON;
+}
+
+static inline int qtd_isUnit(qt_d q) {
+    return (qtd_fastmag(q) - 1.0) < LIN_EPSILON;
+}
+
+static inline int qtd_isIdentity(qt_d q) {
+    return (q.r - 1.0) < LIN_EPSILON && v3d_isZero(q.v);
+}
 
 
 // Vector Casting Implementaions
@@ -2281,7 +2771,7 @@ static inline v4_d m4d_mulv3(m4x4_t m, v3_d v) {
     };
 }
 
-static inline v4_d m4d_mulv4(m4x4_t m, v4_d v) {
+static inline v4_d m4d_mulv4(m4x4_d m, v4_d v) {
     return (v4_d){
         .x = v.x * m.x0 + v.y * m.x1 + v.z * m.x2 + v.w * m.x3,
         .y = v.x * m.y0 + v.y * m.y1 + v.z * m.y2 + v.w * m.y3,
@@ -2290,7 +2780,7 @@ static inline v4_d m4d_mulv4(m4x4_t m, v4_d v) {
     };
 }
 
-static inline v4_d m4d_v2mul(v2_d v, m4x4_t m) {
+static inline v4_d m4d_v2mul(v2_d v, m4x4_d m) {
 	return (v4_d){
         .x = v.x * m.x0 + v.y * m.y0,
         .y = v.x * m.x1 + v.y * m.y1,
@@ -2299,7 +2789,7 @@ static inline v4_d m4d_v2mul(v2_d v, m4x4_t m) {
 	};
 }
 
-static inline v4_d m4d_v3mul(v3_d v, m4x4_t m) {
+static inline v4_d m4d_v3mul(v3_d v, m4x4_d m) {
 	return (v4_d){
         .x = v.x * m.x0 + v.y * m.y0 + v.z * m.z0,
         .y = v.x * m.x1 + v.y * m.y1 + v.z * m.z1,
@@ -2308,7 +2798,7 @@ static inline v4_d m4d_v3mul(v3_d v, m4x4_t m) {
 	};
 }
 
-static inline v4_d m4d_v4mul(v4_d v, m4x4_t m) {
+static inline v4_d m4d_v4mul(v4_d v, m4x4_d m) {
 	return (v4_d){
         .x = v.x * m.x0 + v.y * m.y0 + v.z * m.z0 + v.w * m.w0,
         .y = v.x * m.x1 + v.y * m.y1 + v.z * m.z1 + v.w * m.w1,
