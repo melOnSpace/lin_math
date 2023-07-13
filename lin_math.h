@@ -44,6 +44,7 @@
 // the matrix "mat", name it whatever.
 // ----------------------------------------------------------------
 
+// #define _LIN_DEBUG_INTERNAL_
 #ifdef _LIN_DEBUG_INTERNAL_
 #define LIN_MATH3D_IMPLEMENTATION
 #define LIN_DOUBLE
@@ -253,6 +254,9 @@ static inline m4x4_t m4v_eulerXYZ(v3_t angle);
 static inline m4x4_t m4_eulerZYX(float z, float y, float x);
 // Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
 static inline m4x4_t m4v_eulerZYX(v3_t angle);
+
+static inline m4x4_t m4_axis(float x, float y, float z, float angle);
+static inline m4x4_t m4v_axis(v4_t axis);
 
 static inline m4x4_t m4_transpose(m4x4_t m);
 static inline m4x4_t m4_add(m4x4_t a, m4x4_t b);
@@ -982,6 +986,57 @@ static inline m4x4_t m4v_eulerZYX(v3_t angle) {
 }
 
 
+static inline m4x4_t m4_axis(float x, float y, float z, float angle) {
+    float csa = cosf(angle); float sna = sinf(angle);
+    v4_t c0 = (v4_t){
+        .x = csa + (x * x) * (1.0f - csa),
+        .y = y * x * (1.0f - csa) + z * sna,
+        .z = z * x * (1.0f - csa) - y * sna,
+	};
+
+    v4_t c1 = (v4_t){
+        .x = x * y * (1.0f - csa) - z * sna,
+        .y = csa + (y * y) * (1.0f - csa),
+        .z = z * y * (1.0f - csa) + x * sna,
+	};
+
+    v4_t c2 = (v4_t){
+        .x = x * z * (1.0f - csa) + y * sna,
+        .y = y * z * (1.0f - csa) - x * sna,
+        .z = csa + (z * z) * (1.0f - csa),
+	};
+
+
+    v4_t c3 = { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
+    return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+static inline m4x4_t m4v_axis(v4_t axis) {
+    float csa = cosf(axis.angle); float sna = sinf(axis.angle);
+    v4_t c0 = (v4_t){
+        .x = csa + (axis.x * axis.x) * (1.0f - csa),
+        .y = axis.y * axis.x * (1.0f - csa) + axis.z * sna,
+        .z = axis.z * axis.x * (1.0f - csa) - axis.y * sna,
+	};
+
+    v4_t c1 = (v4_t){
+        .x = axis.x * axis.y * (1.0f - csa) - axis.z * sna,
+        .y = csa + (axis.y * axis.y) * (1.0f - csa),
+        .z = axis.z * axis.y * (1.0f - csa) + axis.x * sna,
+	};
+
+    v4_t c2 = (v4_t){
+        .x = axis.x * axis.z * (1.0f - csa) + axis.y * sna,
+        .y = axis.y * axis.z * (1.0f - csa) - axis.x * sna,
+        .z = csa + (axis.z * axis.z) * (1.0f - csa),
+	};
+
+
+    v4_t c3 = { .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 1.0f };
+    return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+
 static inline m4x4_t m4_transpose(m4x4_t m) {
     return (m4x4_t){
         .x0=m.x0, .y0=m.x1, .z0=m.x2, .w0=m.x3,
@@ -1353,6 +1408,9 @@ static inline m4x4_d m4dv_eulerXYZ(v3_d angle);
 static inline m4x4_d m4d_eulerZYX(double z, double y, double x);
 // Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
 static inline m4x4_d m4dv_eulerZYX(v3_d angle);
+
+static inline m4x4_d m4d_axis(double x, double y, double z, double angle);
+static inline m4x4_d m4dv_axis(v4_d axis);
 
 static inline m4x4_d m4d_transpose(m4x4_d m);
 static inline m4x4_d m4d_add(m4x4_d a, m4x4_d b);
@@ -2052,6 +2110,57 @@ static inline m4x4_d m4dv_eulerZYX(v3_d angle) {
         .w = 0.0,
     };
     
+
+    v4_d c3 = { .x = 0.0, .y = 0.0, .z = 0.0, .w = 1.0 };
+    return (m4x4_d){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+
+static inline m4x4_d m4d_axis(double x, double y, double z, double angle) {
+    double csa = cos(angle); double sna = sin(angle);
+    v4_d c0 = (v4_d){
+        .x = csa + (x * x) * (1.0 - csa),
+        .y = y * x * (1.0 - csa) + z * sna,
+        .z = z * x * (1.0 - csa) - y * sna,
+	};
+
+    v4_d c1 = (v4_d){
+        .x = x * y * (1.0 - csa) - z * sna,
+        .y = csa + (y * y) * (1.0 - csa),
+        .z = z * y * (1.0 - csa) + x * sna,
+	};
+
+    v4_d c2 = (v4_d){
+        .x = x * z * (1.0 - csa) + y * sna,
+        .y = y * z * (1.0 - csa) - x * sna,
+        .z = csa + (z * z) * (1.0 - csa),
+	};
+
+
+    v4_d c3 = { .x = 0.0, .y = 0.0, .z = 0.0, .w = 1.0 };
+    return (m4x4_d){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
+}
+
+static inline m4x4_d m4dv_axis(v4_d axis) {
+    double csa = cos(axis.angle); double sna = sin(axis.angle);
+    v4_d c0 = (v4_d){
+        .x = csa + (axis.x * axis.x) * (1.0 - csa),
+        .y = axis.y * axis.x * (1.0 - csa) + axis.z * sna,
+        .z = axis.z * axis.x * (1.0 - csa) - axis.y * sna,
+	};
+
+    v4_d c1 = (v4_d){
+        .x = axis.x * axis.y * (1.0 - csa) - axis.z * sna,
+        .y = csa + (axis.y * axis.y) * (1.0 - csa),
+        .z = axis.z * axis.y * (1.0 - csa) + axis.x * sna,
+	};
+
+    v4_d c2 = (v4_d){
+        .x = axis.x * axis.z * (1.0 - csa) + axis.y * sna,
+        .y = axis.y * axis.z * (1.0 - csa) - axis.x * sna,
+        .z = csa + (axis.z * axis.z) * (1.0 - csa),
+	};
+
 
     v4_d c3 = { .x = 0.0, .y = 0.0, .z = 0.0, .w = 1.0 };
     return (m4x4_d){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
