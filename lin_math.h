@@ -24,7 +24,8 @@
 // comment next to the union member will explain (hopefully) their
 // context.
 //
-// Add this before including #define LIN_MATH3D_IMPLEMENTATION
+// Add this before including:
+// #define LIN_MATH3D_IMPLEMENTATION
 // #define LIN_DOUBLE
 // #define LIN_MATH3D_IMPLEMENTATION
 // All given Vectors can be 2D, 3D, or 4D. They are defined as
@@ -88,8 +89,8 @@ typedef union {
 } v4_t;
 
 typedef union {
-    struct _packed_ { float r, i, j, k; };
-    struct _packed_ { float w; v3_t v; };
+    struct _packed_ { float r, i, j, k; }; // Traditional Representation
+    struct _packed_ { float w; v3_t v; };  // Real and Vector Parts
 
     v4_t v4;
     float data[4];
@@ -104,7 +105,8 @@ typedef union {
         float x3, y3, z3, w3;
     };
 
-    float m[4][4]; // Column Major
+    float m[4][4];  // Column Major
+    float data[16]; // Raw Data
 } m4x4_t;
 
 // Helper Functions! These are just useful
@@ -850,7 +852,7 @@ static inline qt_t qt_sqrt(qt_t q) {
 
     float r = sqrtf((qmag + q.r) / 2.0f);
     v3_t v = v3_muls(v3_norm(q.v), (qmag - q.r) / 2.0f);
-    return (qt_t){ .r = r, .v = v };
+    return (qt_t){ .w = r, .v = v };
 }
 
 static inline qt_t qt_exp(qt_t q) {
@@ -858,7 +860,7 @@ static inline qt_t qt_exp(qt_t q) {
     
     float r = powf(LIN_E_F, q.r) * cosf(vmag);
     v3_t v = v3_muls(v3_divs(q.v, vmag), sinf(vmag));
-    return (qt_t){ .r = r, .v = v };
+    return (qt_t){ .w = r, .v = v };
 }
 
 static inline qt_t qt_ln(qt_t q) {
@@ -866,7 +868,7 @@ static inline qt_t qt_ln(qt_t q) {
 
     float r = logf(qmag);
     v3_t v = v3_muls(v3_norm(q.v), acosf(q.r / qmag));
-    return (qt_t){ .r = r, .v = v };
+    return (qt_t){ .w = r, .v = v };
 }
 
 static inline qt_t qt_pows(qt_t q, float s) {
@@ -2270,7 +2272,7 @@ static inline qt_d qtd_sqrt(qt_d q) {
 
     double r = sqrt((qmag + q.r) / 2.0);
     v3_d v = v3d_muls(v3d_norm(q.v), (qmag - q.r) / 2.0);
-    return (qt_d){ .r = r, .v = v };
+    return (qt_d){ .w = r, .v = v };
 }
 
 static inline qt_d qtd_exp(qt_d q) {
@@ -2278,7 +2280,7 @@ static inline qt_d qtd_exp(qt_d q) {
     
     double r = pow(LIN_E_F, q.r) * cos(vmag);
     v3_d v = v3d_muls(v3d_divs(q.v, vmag), sin(vmag));
-    return (qt_d){ .r = r, .v = v };
+    return (qt_d){ .w = r, .v = v };
 }
 
 static inline qt_d qtd_ln(qt_d q) {
@@ -2286,7 +2288,7 @@ static inline qt_d qtd_ln(qt_d q) {
 
     double r = log(qmag);
     v3_d v = v3d_muls(v3d_norm(q.v), acos(q.r / qmag));
-    return (qt_d){ .r = r, .v = v };
+    return (qt_d){ .w = r, .v = v };
 }
 
 static inline qt_d qtd_pows(qt_d q, double s) {
