@@ -1,9 +1,9 @@
-#ifndef LIN_MATH3D
-#define LIN_MATH3D
+#ifndef LIN_MATH
+#define LIN_MATH
 
 #include <math.h>
 #include <stdio.h>
-
+#include <stdarg.h>
 
 #define LIN_PI_F         3.141592653f
 #define LIN_TAU_F        6.283185307f
@@ -18,36 +18,73 @@
 #define LIN_LN10_F       2.302585092f
 
 
-// Type Definition of various vectors, a quaternion, and a 4x4
-// matrix type! All types are unions, therefore their members can
-// be accessed in different ways depending on the context. A
-// comment next to the union member will explain (hopefully) their
-// context.
+// A single-header linear algerba library for C. Supports 2D, 3D,
+// and 4D vectors. There is only a 4x4 matrix, and quaternions are
+// supported as well. Evert function is staticly inlined. This might
+// be a concern for bloating the final exe, but oh well. 
 //
-// Add this before including:
-// #define LIN_MATH3D_IMPLEMENTATION
+// By default the library only will include function definitions.
+// Actual implementations of the functions must be enabled before
+// including the header file in a given .c file. This can be done
+// with #define LIN_MATH_IMPLEMENTATION
+//
+// 32-bit floats are the default for lin_math. Doubles are supported
+// but also must be enabled with another macro. #define LIN_DOUBLE
+// Said macro only enables double function definitions. Another
+// macro must be used to enable implementation for doubles.
+// Said macro is #define LIN_DOUBLE_IMPLEMENTATION
+//
+// Here is all the include macros and what they do:
+//
+// Enables 32-bit float function implementations
+// #define LIN_MATH_IMPLEMENTATION
+//
+// Enables all 64-bit double function definitions
 // #define LIN_DOUBLE
-// #define LIN_MATH3D_IMPLEMENTATION
+//
+// Enables 64-bit double function implementations
+// #define LIN_DOUBLE_IMPLEMENTATION
+//
+// Enables all of the above
+// #define LIN_ENABLE_ALL
+//
 // All given Vectors can be 2D, 3D, or 4D. They are defined as
-// v#_t where 2 <= # <= 4. For example a 3D Vector is a v3_t; a
-// 2D Vector is v2_t. Vectors are a struct of # floats.
+// v#_t. For example a 3D Vector is a v3_t; a
+// 2D Vector is v2_t. A given vector is is a struct of N floats or
+// doubles. All vectors can be accessed in different ways for a
+// given context. See the type definitions below for said context.
 // 
-// Matrices have only 2 union "context" (don't know the right word)
-// which are 16 floats or a 2D array both in column row order. The
-// Matrix type m4x4_t might get more "context" later if I can think
-// of any useful stuff. If you're using OpenGL and need to pass a
-// m4x4_t to a 4 by 4 matrix uniform then do the following!
-// glUniformMatrix4fv(location, count, GL_FALSE, (GLfloat*)mat.m);
+// The matrix type is 4x4; thus contains 16 floats/doubles.
+// Internally they are stored in COLLUM-MAJOR ORDER. If you are
+// anything like me, collum-major and row-major are always weirdly
+// confusing. Collum-major in this context means that a given
+// matrix is stored as an array of four 4D vectors. Hope that helps
+//
+// With matrices and quaternions order of multiplication matters.
+// For a given matrix multiplication the order is left-to-right.
+// For example, if one wants to first scale, then rotate, then
+// translate -> final matrix = translate * rotate * scale
+//     or m4x4_t final = m4_mul(m4_mul(translate, rotate), scale);
+//     or m4x4_t final = m4_product(3, translate, rotate, scale);
 // 
-// The location and count is up to you, and transpose should be
-// GL_FALSE. To pass the matrix "mat" to a shader cast it's 'm'
-// member as a GLfloat pointer. Of course you don't need to name
-// the matrix "mat", name it whatever.
+// The same is true of quaternions. They are left-to-right. For
+// example, for a rotation along the x-axis, then y-axis, then
+// the z-axis -> final rotation = z-axis * y-axis * x-axis
+//     or qt_t final = qt_mul(qt_mul(z_axis, y_axis), x_axis);
+//     or qt_t final = qt_product(3, z_axis, y_axis, x_axis);
+//
+// OpenGL expects all matrix types to be in collum-major order. 
+// If you want a matrix to be in row-order then a transpose
+// function is provided. Just keep in mind that OpenGL will have to
+// be told to transpose the matrix. When passing a matrix to a
+// uniform it should look like this: 
+//     glUniformMatrix4fv(location, 1, GL_FALSE, &matrix.m[0][0]);
+//         use GL_TRUE if the matrix has been transposed
 // ----------------------------------------------------------------
 
-// #define _LIN_DEBUG_INTERNAL_
-#ifdef _LIN_DEBUG_INTERNAL_
-#define LIN_MATH3D_IMPLEMENTATION
+#define LIN_ENABLE_ALL
+#ifdef LIN_ENABLE_ALL
+#define LIN_MATH_IMPLEMENTATION
 #define LIN_DOUBLE
 #define LIN_DOUBLE_IMPLEMENTATION
 #endif
@@ -120,29 +157,38 @@ static inline float lerpf(float a, float b, float t);
 // decorations
 // ---------------------------------------
 
-static inline v2_t v2(float x, float y);
-static inline v2_t v2Init(float i);
+static inline v2_t v2(float x, float y); /* Returns a 2D Vector */
+static inline v2_t v2Init(float i); /* Returns vector initalized to i */
 
-static inline v2_t v2_add(v2_t a, v2_t b);
-static inline v2_t v2_adds(v2_t v, float s);
-static inline v2_t v2_sub(v2_t a, v2_t b);
-static inline v2_t v2_subs(v2_t v, float s);
-static inline v2_t v2_mul(v2_t a, v2_t b);
-static inline v2_t v2_muls(v2_t v, float s);
-static inline v2_t v2_div(v2_t a, v2_t b);
-static inline v2_t v2_divs(v2_t v, float s);
+static inline v2_t v2_add(v2_t a, v2_t b);   /* Pair-wise addition */
+static inline v2_t v2_adds(v2_t v, float s); /* Adds s to all fields */
+static inline v2_t v2_sub(v2_t a, v2_t b);   /* Pair-wise subtraction */
+static inline v2_t v2_subs(v2_t v, float s); /* Subs s to all fields */
+static inline v2_t v2_mul(v2_t a, v2_t b);   /* Pair-wise multiplication */
+static inline v2_t v2_muls(v2_t v, float s); /* Muls s to all fields */
+static inline v2_t v2_div(v2_t a, v2_t b);   /* Pair-wise division */
+static inline v2_t v2_divs(v2_t v, float s); /* Divs s to all fields */
 
-static inline v2_t v2_proj(v2_t a, v2_t b);
-static inline v2_t v2_norm(v2_t v);
-static inline v2_t v2_lerp(v2_t a, v2_t b, float t);
+static inline v2_t v2_sum(int num, ...);                   /* Variatic addition */
+static inline v2_t v2a_sum(size_t len, v2_t* array);       /* Sumation of an array */
+static inline v2_t v2_differnce(int num, ...);             /* Variatic subtraction */
+static inline v2_t v2a_differnce(size_t len, v2_t* array); /* Difference of an array */
+static inline v2_t v2_product(int num, ...);               /* Variatic multiplication */
+static inline v2_t v2a_product(size_t len, v2_t* array);   /* Product of an array */
+static inline v2_t v2_quotient(int num, ...);              /* Variatic division */
+static inline v2_t v2a_quotient(size_t len, v2_t* array);  /* Quotient of an array */
 
-static inline float v2_mag(v2_t v);
-static inline float v2_fastmag(v2_t v);
-static inline float v2_dist(v2_t a, v2_t b);
-static inline float v2_fastdist(v2_t a, v2_t b);
-static inline float v2_dot(v2_t a, v2_t b);
-static inline float v2_angle(v2_t a, v2_t b);
-static inline int v2_isZero(v2_t v);
+static inline v2_t v2_proj(v2_t a, v2_t b);          /* Project a onto b */
+static inline v2_t v2_norm(v2_t v);                  /* Normalize v */
+static inline v2_t v2_lerp(v2_t a, v2_t b, float t); /* linear interp */
+
+static inline float v2_mag(v2_t v);              /* Magnitude of v */
+static inline float v2_fastmag(v2_t v);          /* Magnitude squared of v */
+static inline float v2_dist(v2_t a, v2_t b);     /* Magnitude of v2_sub(a, b) */
+static inline float v2_fastdist(v2_t a, v2_t b); /* Magnitude^2 of v2_sub(a, b) */
+static inline float v2_dot(v2_t a, v2_t b);      /* Dot product of a and b */
+static inline float v2_angle(v2_t a, v2_t b);    /* Angle (in rads) betwen a and b */
+static inline int v2_isZero(v2_t v);             /* Checks if v is zero */
 
 // Prints a vector. Works with both v2_t & v2_d
 #define v2_print(v) (printf("[%f, %f]", (v).x, (v).y))
@@ -153,30 +199,39 @@ static inline int v2_isZero(v2_t v);
 // decorations
 // ---------------------------------------
 
-static inline v3_t v3(float x, float y, float z);
-static inline v3_t v3Init(float i);
+static inline v3_t v3(float x, float y, float z); /* Returns a 3D Vector */
+static inline v3_t v3Init(float i); /* Returns vector initalized to i  */
 
-static inline v3_t v3_add(v3_t a, v3_t b);
-static inline v3_t v3_adds(v3_t v, float s);
-static inline v3_t v3_sub(v3_t a, v3_t b);
-static inline v3_t v3_subs(v3_t v, float s);
-static inline v3_t v3_mul(v3_t a, v3_t b);
-static inline v3_t v3_muls(v3_t v, float s);
-static inline v3_t v3_div(v3_t a, v3_t b);
-static inline v3_t v3_divs(v3_t v, float s);
+static inline v3_t v3_add(v3_t a, v3_t b);   /* Pair-wise addition */
+static inline v3_t v3_adds(v3_t v, float s); /* Adds s to all fields */
+static inline v3_t v3_sub(v3_t a, v3_t b);   /* Pair-wise subtraction */
+static inline v3_t v3_subs(v3_t v, float s); /* Subs s to all fields */
+static inline v3_t v3_mul(v3_t a, v3_t b);   /* Pair-wise multiplication */
+static inline v3_t v3_muls(v3_t v, float s); /* Muls s to all fields */
+static inline v3_t v3_div(v3_t a, v3_t b);   /* Pair-wise division */
+static inline v3_t v3_divs(v3_t v, float s); /* Divs s to all fields */
 
-static inline v3_t v3_cross(v3_t a, v3_t b);
-static inline v3_t v3_proj(v3_t a, v3_t b);
-static inline v3_t v3_norm(v3_t v);
-static inline v3_t v3_lerp(v3_t a, v3_t b, float t);
+static inline v3_t v3_sum(int num, ...);                   /* Variatic addition */
+static inline v3_t v3a_sum(size_t len, v3_t* array);       /* Sumation of an array */
+static inline v3_t v3_differnce(int num, ...);             /* Variatic subtraction */
+static inline v3_t v3a_differnce(size_t len, v3_t* array); /* Difference of an array */
+static inline v3_t v3_product(int num, ...);               /* Variatic multiplication */
+static inline v3_t v3a_product(size_t len, v3_t* array);   /* Product of an array */
+static inline v3_t v3_quotient(int num, ...);              /* Variatic division */
+static inline v3_t v3a_quotient(size_t len, v3_t* array);  /* Quotient of an array */
 
-static inline float v3_mag(v3_t v);
-static inline float v3_fastmag(v3_t v);
-static inline float v3_dist(v3_t a, v3_t b);
-static inline float v3_fastdist(v3_t a, v3_t b);
-static inline float v3_dot(v3_t a, v3_t b);
-static inline float v3_angle(v3_t a, v3_t b);
-static inline int v3_isZero(v3_t v);
+static inline v3_t v3_cross(v3_t a, v3_t b);         /* Cross-Product of a and b */
+static inline v3_t v3_proj(v3_t a, v3_t b);          /* Project a onto b */
+static inline v3_t v3_norm(v3_t v);                  /* Normalize v */
+static inline v3_t v3_lerp(v3_t a, v3_t b, float t); /* linear interp */
+
+static inline float v3_mag(v3_t v);              /* Magnitude of v */
+static inline float v3_fastmag(v3_t v);          /* Magnitude squared of v */
+static inline float v3_dist(v3_t a, v3_t b);     /* Magnitude of v3_sub(a, b) */
+static inline float v3_fastdist(v3_t a, v3_t b); /* Magnitude^2 of v3_sub(a, b) */
+static inline float v3_dot(v3_t a, v3_t b);      /* Dot Product of a and b */
+static inline float v3_angle(v3_t a, v3_t b);    /* Angle between a and b */
+static inline int v3_isZero(v3_t v);             /* Checks if v is zero */
 
 // Prints a vector. Works with both v3_t & v3_d
 #define v3_print(v) (printf("[%f, %f, %f]", (v).x, (v).y, (v).z))
@@ -187,30 +242,39 @@ static inline int v3_isZero(v3_t v);
 // decorations
 // ---------------------------------------
 
-static inline v4_t v4(float x, float y, float z, float w);
-static inline v4_t v4Init(float i);
+static inline v4_t v4(float x, float y, float z, float w); /* Returns a 4D Vector */
+static inline v4_t v4Init(float i); /* Returns vector initalized to i */
 
-static inline v4_t v4_add(v4_t a, v4_t b);
-static inline v4_t v4_adds(v4_t v, float s);
-static inline v4_t v4_sub(v4_t a, v4_t b);
-static inline v4_t v4_subs(v4_t v, float s);
-static inline v4_t v4_mul(v4_t a, v4_t b);
-static inline v4_t v4_muls(v4_t v, float s);
-static inline v4_t v4_div(v4_t a, v4_t b);
-static inline v4_t v4_divs(v4_t v, float s);
+static inline v4_t v4_add(v4_t a, v4_t b);   /* Pair-wise addition */
+static inline v4_t v4_adds(v4_t v, float s); /* Adds s to all fields */
+static inline v4_t v4_sub(v4_t a, v4_t b);   /* Pair-wise subtraction */
+static inline v4_t v4_subs(v4_t v, float s); /* Subs s to all fields */
+static inline v4_t v4_mul(v4_t a, v4_t b);   /* Pair-wise multiplication */
+static inline v4_t v4_muls(v4_t v, float s); /* Muls s to all fields */
+static inline v4_t v4_div(v4_t a, v4_t b);   /* Pair-wise division */
+static inline v4_t v4_divs(v4_t v, float s); /* Divs s to all fields */
 
-static inline v4_t v4_proj(v4_t a, v4_t b);
-static inline v4_t v4_norm(v4_t v);
-static inline v4_t v4_normAxis(v4_t v);
-static inline v4_t v4_lerp(v4_t a, v4_t b, float t);
+static inline v4_t v4_sum(int num, ...);                   /* Variatic addition */
+static inline v4_t v4a_sum(size_t len, v4_t* array);       /* Sumation of an array */
+static inline v4_t v4_differnce(int num, ...);             /* Variatic subtraction */
+static inline v4_t v4a_differnce(size_t len, v4_t* array); /* Difference of an array */
+static inline v4_t v4_product(int num, ...);               /* Variatic multiplication */
+static inline v4_t v4a_product(size_t len, v4_t* array);   /* Product of an array */
+static inline v4_t v4_quotient(int num, ...);              /* Variatic division */
+static inline v4_t v4a_quotient(size_t len, v4_t* array);  /* Quotient of an array */
 
-static inline float v4_mag(v4_t v);
-static inline float v4_fastmag(v4_t v);
-static inline float v4_dist(v4_t a, v4_t b);
-static inline float v4_fastdist(v4_t a, v4_t b);
-static inline float v4_dot(v4_t a, v4_t b);
-static inline float v4_angle(v4_t a, v4_t b);
-static inline int v4_isZero(v4_t v);
+static inline v4_t v4_proj(v4_t a, v4_t b);          /* Project a onto b */
+static inline v4_t v4_norm(v4_t v);                  /* Normalize v */
+static inline v4_t v4_normAxis(v4_t v);              /* Normalize only v.axis */
+static inline v4_t v4_lerp(v4_t a, v4_t b, float t); /* linear interp */
+
+static inline float v4_mag(v4_t v);              /* Magnitude of v */
+static inline float v4_fastmag(v4_t v);          /* Magnitude squared of v */
+static inline float v4_dist(v4_t a, v4_t b);     /* Magnitude of v4_sub(a, b) */
+static inline float v4_fastdist(v4_t a, v4_t b); /* Magnitude^2 of v4_sub(a, b) */
+static inline float v4_dot(v4_t a, v4_t b);      /* Dot product of a and b */
+static inline float v4_angle(v4_t a, v4_t b);    /* Angle between a and b */
+static inline int v4_isZero(v4_t v);             /* Checks if v is zero */
 
 // Prints a vector. Works with both v4_t & v4_d
 #define v4_print(v) (printf("[%f, %f, %f, %f]", (v).x, (v).y, (v).z, (v).w))
@@ -221,40 +285,47 @@ static inline int v4_isZero(v4_t v);
 // decorations
 // ---------------------------------------
 
-static inline qt_t qt(float r, float i, float j, float k);
-static inline qt_t qtInit(float i);
+static inline qt_t qt(float r, float i, float j, float k); /* Returns a quaternion */
+static inline qt_t qtInit(float i); /* Returns quaternion initalized to i */
 
-static inline qt_t qt_identity(void);
-static inline qt_t qt_axis(float x, float y, float z, float angle);
-static inline qt_t qtv_axis(v4_t axis);
+static inline qt_t qt_identity(void); /* Returns 1 + 0i + 0j + 0k */
+static inline qt_t qt_axis(float x, float y, float z, float angle); /* Axis-Angle to quaternion */
+static inline qt_t qtv_axis(v4_t axis); /* Axis angle to quaternion */
 
-static inline qt_t qt_add(qt_t a, qt_t b);
-static inline qt_t qt_adds(qt_t q, float s);
-static inline qt_t qt_sub(qt_t a, qt_t b);
-static inline qt_t qt_subs(qt_t q, float s);
-static inline qt_t qt_mul(qt_t a, qt_t b);
-static inline qt_t qt_muls(qt_t q, float s);
-static inline qt_t qt_divs(qt_t q, float s);
+static inline qt_t qt_add(qt_t a, qt_t b);   /* Pair-Wise addtion */
+static inline qt_t qt_adds(qt_t q, float s); /* Adds s to all fields */
+static inline qt_t qt_sub(qt_t a, qt_t b);   /* Pair-Wise subtraction */
+static inline qt_t qt_subs(qt_t q, float s); /* Subs s to all fields */
+static inline qt_t qt_mul(qt_t a, qt_t b);   /* Quaternion multiplication */
+static inline qt_t qt_muls(qt_t q, float s); /* Muls s to all fields */
+static inline qt_t qt_divs(qt_t q, float s); /* Divs s to all fields */
 
-static inline qt_t qt_sqrt(qt_t q);
-static inline qt_t qt_exp(qt_t q);
-static inline qt_t qt_ln(qt_t q);
-static inline qt_t qt_pows(qt_t q, float s);
+static inline qt_t qt_sum(int num, ...);                   /* Variatic addition */
+static inline qt_t qta_sum(size_t len, qt_t* array);       /* Sumation of an array */
+static inline qt_t qt_differnce(int num, ...);             /* Variatic subtraction */
+static inline qt_t qta_differnce(size_t len, qt_t* array); /* Difference of an array */
+static inline qt_t qt_product(int num, ...);               /* Variatic multiplication */
+static inline qt_t qta_product(size_t len, qt_t* array);   /* Product of an array */
 
-static inline qt_t qt_conjugate(qt_t q);
-static inline qt_t qt_inverse(qt_t q);
-static inline qt_t qt_cross(qt_t a, qt_t b);
-static inline qt_t qt_norm(qt_t q);
-static inline qt_t qt_lerp(qt_t a, qt_t b, float t);
-static inline qt_t qt_slerp(qt_t a, qt_t b, float t);
+static inline qt_t qt_sqrt(qt_t q); /* Square-Root of a quaternion */
+static inline qt_t qt_exp(qt_t q);  /* Exponential of a quaternion */
+static inline qt_t qt_ln(qt_t q);   /* Natural Log of a quaternion */
+static inline qt_t qt_pows(qt_t q, float s); /* Quaternion to the power of s */
 
-static inline float qt_mag(qt_t q);
-static inline float qt_fastmag(qt_t q);
-static inline float qt_geonorm(qt_t a, qt_t b); // Geodesic Distance
-static inline float qt_dot(qt_t a, qt_t b);
-static inline int qt_isZero(qt_t q);
-static inline int qt_isUnit(qt_t q);
-static inline int qt_isIdentity(qt_t q);
+static inline qt_t qt_conjugate(qt_t q);     /* q* = q.r - q.i - q.j - q.k */
+static inline qt_t qt_inverse(qt_t q);       /* q^-1 = q* / qt_fastmag(q) */
+static inline qt_t qt_cross(qt_t a, qt_t b); /* Cross product of a quaternion */
+static inline qt_t qt_norm(qt_t q);          /* Normalize q */
+static inline qt_t qt_lerp(qt_t a, qt_t b, float t);  /* linear interp */
+static inline qt_t qt_slerp(qt_t a, qt_t b, float t); /* spherical interp */
+
+static inline float qt_mag(qt_t q);             /* Magnitude of q */
+static inline float qt_fastmag(qt_t q);         /* Magnitude squared of q */
+static inline float qt_geonorm(qt_t a, qt_t b); /* Geodesic Distance, i.e., angle between */
+static inline float qt_dot(qt_t a, qt_t b);     /* Dot product */
+static inline int qt_isZero(qt_t q);            /* Checks if q is zero */
+static inline int qt_isUnit(qt_t q);            /* Checks if q is a unit quaternion (mag == 1) */
+static inline int qt_isIdentity(qt_t q);        /* Checks if q == 1 + 0i + 0j + 0k */
 
 // Prints a quaternion. Works with both qt_t & qt_d
 #define qt_print(v) (printf("[%f, %fi, %fj, %fk]", (v).x, (v).y, (v).z, (v).w))
@@ -279,28 +350,30 @@ static inline v4_t v3_to_v4(v3_t v);
 // Various Matrix Functions!
 // -------------------------
 
-static inline m4x4_t m4v(v4_t c0, v4_t c1, v4_t c2, v4_t c3);
+static inline m4x4_t m4v(v4_t c0, v4_t c1, v4_t c2, v4_t c3); /* Returns a 4x4 Matrix */
 static inline m4x4_t m4(
         float x0, float x1, float x2, float x3,
         float y0, float y1, float y2, float y3,
         float z0, float z1, float z2, float z3,
-        float w0, float w1, float w2, float w3);
-static inline m4x4_t m4Init(float i);
+        float w0, float w1, float w2, float w3); /* Returns a 4x4 Matrix */
+static inline m4x4_t m4Init(float i); /* Returns a 4x4 Matrix initalized to i */
 
-static inline m4x4_t m4_identity(void);
-static inline m4x4_t m4_translation(float x, float y, float z);
-static inline m4x4_t m4v_translation(v3_t offset);
-static inline m4x4_t m4_scaling(float x, float y, float z);
-static inline m4x4_t m4v_scaling(v3_t scale);
+static inline m4x4_t m4_identity(void);                         /* Returns identity matrix */
+static inline m4x4_t m4_translation(float x, float y, float z); /* Returns translation matrix */
+static inline m4x4_t m4v_translation(v3_t offset);              /* Returns translation matrix */
+static inline m4x4_t m4_scaling(float x, float y, float z);     /* Returns scaling matrix */
+static inline m4x4_t m4v_scaling(v3_t scale);                   /* Returns scaling matrix */
 
-static inline m4x4_t m4_xrot(float x);
-static inline m4x4_t m4_yrot(float y);
-static inline m4x4_t m4_zrot(float z);
-static inline m4x4_t m4_perspective(float fovy, float aratio, float near_plane, float far_plane);
+static inline m4x4_t m4_xrot(float x); /* Returns rotation matrix for x-axis */
+static inline m4x4_t m4_yrot(float y); /* Returns rotation matrix for y-axis */
+static inline m4x4_t m4_zrot(float z); /* Returns rotation matrix for z-axis */
+static inline m4x4_t m4_perspective(
+        float fovy, float aratio,
+        float near_plane, float far_plane); /* Returns perspective matrix */
 static inline m4x4_t m4_ortho(
         float left, float right,
         float bottom, float top,
-        float back, float front);
+        float back, float front); /* Returns ortho matrix */
 
 // Euler Rotation in order of X-Axis -> Y-Axis -> Z-Axis
 static inline m4x4_t m4_eulerXYZ(float x, float y, float z);
@@ -311,30 +384,38 @@ static inline m4x4_t m4_eulerZYX(float z, float y, float x);
 // Euler Rotation in order of Z-Axis -> Y-Axis -> X-Axis
 static inline m4x4_t m4v_eulerZYX(v3_t angle);
 
-static inline m4x4_t m4_axis(float x, float y, float z, float angle);
-static inline m4x4_t m4v_axis(v4_t axis);
+static inline m4x4_t m4_axis(float x, float y, float z, float angle); /* Axis-Angle to matrix */
+static inline m4x4_t m4v_axis(v4_t axis); /* Axis-Angle to matrix */
 
-static inline m4x4_t m4_quaternion(float r, float i, float j, float k);
-static inline m4x4_t m4v_quaternion(qt_t q);
+static inline m4x4_t m4_quaternion(float r, float i, float j, float k); /* Quaternion to matrix */
+static inline m4x4_t m4v_quaternion(qt_t q); /* Quaternion to matrix */
 
-static inline m4x4_t m4_transpose(m4x4_t m);
-static inline m4x4_t m4_add(m4x4_t a, m4x4_t b);
-static inline m4x4_t m4_adds(m4x4_t m, float s);
-static inline m4x4_t m4_sub(m4x4_t a, m4x4_t b);
-static inline m4x4_t m4_subs(m4x4_t m, float s);
-static inline m4x4_t m4_mul(m4x4_t a, m4x4_t b);
-static inline m4x4_t m4_muls(m4x4_t m, float s);
+static inline m4x4_t m4_transpose(m4x4_t m); /* Switch between collum and row major order */
+static inline m4x4_t m4_add(m4x4_t a, m4x4_t b); /* Pair-Wise addition */
+static inline m4x4_t m4_adds(m4x4_t m, float s); /* Adds s to all fields */
+static inline m4x4_t m4_sub(m4x4_t a, m4x4_t b); /* Pair-Wise subtraction */
+static inline m4x4_t m4_subs(m4x4_t m, float s); /* Subs s to all fields */
+static inline m4x4_t m4_mul(m4x4_t a, m4x4_t b); /* Matrix multiplication */
+static inline m4x4_t m4_muls(m4x4_t m, float s); /* Muls s to all fields */
+static inline m4x4_t m4_divs(m4x4_t m, float s); /* Divs s to all fields */
+
+static inline m4x4_t m4_sum(int num, ...);                   /* Variatic addition */
+static inline m4x4_t m4a_sum(size_t len, m4x4_t* array);       /* Sumation of an array */
+static inline m4x4_t m4_differnce(int num, ...);             /* Variatic subtraction */
+static inline m4x4_t m4a_differnce(size_t len, m4x4_t* array); /* Difference of an array */
+static inline m4x4_t m4_product(int num, ...);               /* Variatic multiplication */
+static inline m4x4_t m4a_product(size_t len, m4x4_t* array);   /* Product of an array */
 
 // This is mostly a joke function. Like, why lerp a matrix?
 static inline m4x4_t m4_lerp(m4x4_t a, m4x4_t b, float t);
 
-static inline v4_t m4_mulv2(m4x4_t m, v2_t v);
-static inline v4_t m4_mulv3(m4x4_t m, v3_t v);
-static inline v4_t m4_mulv4(m4x4_t m, v4_t v);
+static inline v4_t m4_mulv2(m4x4_t m, v2_t v); /* new_v = M*v */
+static inline v4_t m4_mulv3(m4x4_t m, v3_t v); /* new_v = M*v */
+static inline v4_t m4_mulv4(m4x4_t m, v4_t v); /* new_v = M*v */
 
-static inline v4_t m4_v2mul(v2_t v, m4x4_t m);
-static inline v4_t m4_v3mul(v3_t v, m4x4_t m);
-static inline v4_t m4_v4mul(v4_t v, m4x4_t m);
+static inline v4_t m4_v2mul(v2_t v, m4x4_t m); /* new_v = v*M */
+static inline v4_t m4_v3mul(v3_t v, m4x4_t m); /* new_v = v*M */
+static inline v4_t m4_v4mul(v4_t v, m4x4_t m); /* new_v = v*M */
 
 
 #define MATRIX_PRINT_STR "\
@@ -364,7 +445,7 @@ static inline v4_t m4_v4mul(v4_t v, m4x4_t m);
             (m).w0, (m).w1, (m).w2, (m).w3))
 
 
-#ifdef LIN_MATH3D_IMPLEMENTATION
+#ifdef LIN_MATH_IMPLEMENTATION
 
 // Help Function Implementaions
 // ----------------------------
@@ -439,6 +520,99 @@ static inline v2_t v2_divs(v2_t v, float s) {
         .x = v.x / s,
         .y = v.y / s,
     };
+}
+
+
+static inline v2_t v2_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v2_t result = { .x=0.0f, .y=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v2_add(result, va_arg(args, v2_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v2_t v2a_sum(size_t len, v2_t* array) {
+    v2_t result = { .x=0.0f, .y=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v2_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline v2_t v2_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v2_t result = { .x=0.0f, .y=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v2_sub(result, va_arg(args, v2_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v2_t v2a_differnce(size_t len, v2_t* array) {
+    v2_t result = { .x=0.0f, .y=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v2_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline v2_t v2_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v2_t result = { .x=0.0f, .y=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v2_mul(result, va_arg(args, v2_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v2_t v2a_product(size_t len, v2_t* array) {
+    v2_t result = { .x=0.0f, .y=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v2_mul(result, *array);
+    }
+
+    return result;
+}
+
+static inline v2_t v2_quotient(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v2_t result = { .x=0.0f, .y=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v2_div(result, va_arg(args, v2_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v2_t v2a_quotient(size_t len, v2_t* array) {
+    v2_t result = { .x=0.0f, .y=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v2_div(result, *array);
+    }
+
+    return result;
 }
 
 
@@ -560,6 +734,100 @@ static inline v3_t v3_divs(v3_t v, float s) {
         .z = v.z / s,
     };
 }
+
+
+static inline v3_t v3_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v3_add(result, va_arg(args, v3_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v3_t v3a_sum(size_t len, v3_t* array) {
+    v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v3_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline v3_t v3_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v3_sub(result, va_arg(args, v3_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v3_t v3a_differnce(size_t len, v3_t* array) {
+    v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v3_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline v3_t v3_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v3_mul(result, va_arg(args, v3_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v3_t v3a_product(size_t len, v3_t* array) {
+    v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v3_mul(result, *array);
+    }
+
+    return result;
+}
+
+static inline v3_t v3_quotient(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v3_div(result, va_arg(args, v3_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v3_t v3a_quotient(size_t len, v3_t* array) {
+    v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v3_div(result, *array);
+    }
+
+    return result;
+}
+
 
 static inline v3_t v3_cross(v3_t a, v3_t b) {
     return (v3_t){
@@ -694,6 +962,99 @@ static inline v4_t v4_divs(v4_t v, float s) {
         .z = v.z / s,
         .w = v.w / s,
     };
+}
+
+
+static inline v4_t v4_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v4_add(result, va_arg(args, v4_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v4_t v4a_sum(size_t len, v4_t* array) {
+    v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v4_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline v4_t v4_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v4_sub(result, va_arg(args, v4_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v4_t v4a_differnce(size_t len, v4_t* array) {
+    v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v4_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline v4_t v4_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v4_mul(result, va_arg(args, v4_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v4_t v4a_product(size_t len, v4_t* array) {
+    v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v4_mul(result, *array);
+    }
+
+    return result;
+}
+
+static inline v4_t v4_quotient(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = v4_div(result, va_arg(args, v4_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v4_t v4a_quotient(size_t len, v4_t* array) {
+    v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v4_div(result, *array);
+    }
+
+    return result;
 }
 
 
@@ -846,6 +1207,77 @@ static inline qt_t qt_divs(qt_t q, float s) {
         .k = q.k / s,
     };
 }
+
+
+static inline qt_t qt_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    qt_t result = { .r=0.0f, .i=0.0f, .j=0.0f, .k=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = qt_add(result, va_arg(args, qt_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline qt_t qta_sum(size_t len, qt_t* array) {
+    qt_t result = { .r=0.0f, .i=0.0f, .j=0.0f, .k=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = qt_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline qt_t qt_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    qt_t result = { .r=0.0f, .i=0.0f, .j=0.0f, .k=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = qt_sub(result, va_arg(args, qt_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline qt_t qta_differnce(size_t len, qt_t* array) {
+    qt_t result = { .r=0.0f, .i=0.0f, .j=0.0f, .k=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = qt_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline qt_t qt_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    qt_t result = { .r=0.0f, .i=0.0f, .j=0.0f, .k=0.0f };
+    for (int i = 0; i < num; ++i) {
+        result = qt_mul(result, va_arg(args, qt_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline qt_t qta_product(size_t len, qt_t* array) {
+    qt_t result = { .r=0.0f, .i=0.0f, .j=0.0f, .k=0.0f };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = qt_mul(result, *array);
+    }
+
+    return result;
+}
+
 
 static inline qt_t qt_sqrt(qt_t q) {
     float qmag = sqrtf(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
@@ -1436,6 +1868,86 @@ static inline m4x4_t m4_muls(m4x4_t m, float s) {
     };
 }
 
+static inline m4x4_t m4_divs(m4x4_t m, float s) {
+    return (m4x4_t){
+        .x0=m.x0 / s, .y0=m.y0 / s, .z0=m.z0 / s, .w0=m.w0 / s,
+        .x1=m.x1 / s, .y1=m.y1 / s, .z1=m.z1 / s, .w1=m.w1 / s,
+        .x2=m.x2 / s, .y2=m.y2 / s, .z2=m.z2 / s, .w2=m.w2 / s,
+        .x3=m.x3 / s, .y3=m.y3 / s, .z3=m.z3 / s, .w3=m.w3 / s,
+    };
+}
+
+
+static inline m4x4_t m4_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    m4x4_t result = {0};
+    for (int i = 0; i < num; ++i) {
+        result = m4_add(result, va_arg(args, m4x4_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline m4x4_t m4a_sum(size_t len, m4x4_t* array) {
+    m4x4_t result = {0};
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = m4_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline m4x4_t m4_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    m4x4_t result = {0};
+    for (int i = 0; i < num; ++i) {
+        result = m4_sub(result, va_arg(args, m4x4_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline m4x4_t m4a_differnce(size_t len, m4x4_t* array) {
+    m4x4_t result = {0};
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = m4_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline m4x4_t m4_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    m4x4_t result = {0};
+    for (int i = 0; i < num; ++i) {
+        result = m4_mul(result, va_arg(args, m4x4_t));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline m4x4_t m4a_product(size_t len, m4x4_t* array) {
+    m4x4_t result = {0};
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = m4_mul(result, *array);
+    }
+
+    return result;
+}
+
+
 static inline m4x4_t m4_lerp(m4x4_t a, m4x4_t b, float t) {
     return (m4x4_t) {
         .c0 = v4_lerp(a.c0, b.c0, t),
@@ -1598,6 +2110,15 @@ static inline v2_d v2d_muls(v2_d v, double s);
 static inline v2_d v2d_div(v2_d a, v2_d b);
 static inline v2_d v2d_divs(v2_d v, double s);
 
+static inline v2_d v2d_sum(int num, ...);                   /* Variatic addition */
+static inline v2_d v2da_sum(size_t len, v2_d* array);       /* Sumation of an array */
+static inline v2_d v2d_differnce(int num, ...);             /* Variatic subtraction */
+static inline v2_d v2da_differnce(size_t len, v2_d* array); /* Difference of an array */
+static inline v2_d v2d_product(int num, ...);               /* Variatic multiplication */
+static inline v2_d v2da_product(size_t len, v2_d* array);   /* Product of an array */
+static inline v2_d v2d_quotient(int num, ...);              /* Variatic division */
+static inline v2_d v2da_quotient(size_t len, v2_d* array);  /* Quotient of an array */
+
 static inline v2_d v2d_proj(v2_d a, v2_d b);
 static inline v2_d v2d_norm(v2_d v);
 static inline v2_d v2d_lerp(v2_d a, v2_d b, double t);
@@ -1625,6 +2146,15 @@ static inline v3_d v3d_mul(v3_d a, v3_d b);
 static inline v3_d v3d_muls(v3_d v, double s);
 static inline v3_d v3d_div(v3_d a, v3_d b);
 static inline v3_d v3d_divs(v3_d v, double s);
+
+static inline v3_d v3d_sum(int num, ...);                   /* Variatic addition */
+static inline v3_d v3da_sum(size_t len, v3_d* array);       /* Sumation of an array */
+static inline v3_d v3d_differnce(int num, ...);             /* Variatic subtraction */
+static inline v3_d v3da_differnce(size_t len, v3_d* array); /* Difference of an array */
+static inline v3_d v3d_product(int num, ...);               /* Variatic multiplication */
+static inline v3_d v3da_product(size_t len, v3_d* array);   /* Product of an array */
+static inline v3_d v3d_quotient(int num, ...);              /* Variatic division */
+static inline v3_d v3da_quotient(size_t len, v3_d* array);  /* Quotient of an array */
 
 static inline v3_d v3d_cross(v3_d a, v3_d b);
 static inline v3_d v3d_proj(v3_d a, v3_d b);
@@ -1654,6 +2184,15 @@ static inline v4_d v4d_mul(v4_d a, v4_d b);
 static inline v4_d v4d_muls(v4_d v, double s);
 static inline v4_d v4d_div(v4_d a, v4_d b);
 static inline v4_d v4d_divs(v4_d v, double s);
+
+static inline v4_d v4d_sum(int num, ...);                   /* Variatic addition */
+static inline v4_d v4da_sum(size_t len, v4_d* array);       /* Sumation of an array */
+static inline v4_d v4d_differnce(int num, ...);             /* Variatic subtraction */
+static inline v4_d v4da_differnce(size_t len, v4_d* array); /* Difference of an array */
+static inline v4_d v4d_product(int num, ...);               /* Variatic multiplication */
+static inline v4_d v4da_product(size_t len, v4_d* array);   /* Product of an array */
+static inline v4_d v4d_quotient(int num, ...);              /* Variatic division */
+static inline v4_d v4da_quotient(size_t len, v4_d* array);  /* Quotient of an array */
 
 static inline v4_d v4d_proj(v4_d a, v4_d b);
 static inline v4_d v4d_norm(v4_d v);
@@ -1686,6 +2225,13 @@ static inline qt_d qtd_subs(qt_d q, double s);
 static inline qt_d qtd_mul(qt_d a, qt_d b);
 static inline qt_d qtd_muls(qt_d q, double s);
 static inline qt_d qtd_divs(qt_d q, double s);
+
+static inline qt_d qtd_sum(int num, ...);                   /* Variatic addition */
+static inline qt_d qtda_sum(size_t len, qt_d* array);       /* Sumation of an array */
+static inline qt_d qtd_differnce(int num, ...);             /* Variatic subtraction */
+static inline qt_d qtda_differnce(size_t len, qt_d* array); /* Difference of an array */
+static inline qt_d qtd_product(int num, ...);               /* Variatic multiplication */
+static inline qt_d qtda_product(size_t len, qt_d* array);   /* Product of an array */
 
 static inline qt_d qtd_sqrt(qt_d q);
 static inline qt_d qtd_exp(qt_d q);
@@ -1770,6 +2316,13 @@ static inline m4x4_d m4d_sub(m4x4_d a, m4x4_d b);
 static inline m4x4_d m4d_subs(m4x4_d m, double s);
 static inline m4x4_d m4d_mul(m4x4_d a, m4x4_d b);
 static inline m4x4_d m4d_muls(m4x4_d m, double s);
+
+static inline m4x4_d m4d_sum(int num, ...);                     /* Variatic addition */
+static inline m4x4_d m4da_sum(size_t len, m4x4_d* array);       /* Sumation of an array */
+static inline m4x4_d m4d_differnce(int num, ...);               /* Variatic subtraction */
+static inline m4x4_d m4da_differnce(size_t len, m4x4_d* array); /* Difference of an array */
+static inline m4x4_d m4d_product(int num, ...);                 /* Variatic multiplication */
+static inline m4x4_d m4da_product(size_t len, m4x4_d* array);   /* Product of an array */
 
 // This is mostly a joke function. Why lerp a matrix?
 static inline m4x4_d m4d_lerp(m4x4_d a, m4x4_d b, double t);
@@ -1862,6 +2415,99 @@ static inline v2_d v2d_divs(v2_d v, double s) {
 }
 
 
+static inline v2_d v2d_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v2_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v2d_add(result, va_arg(args, v2_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v2_d v2da_sum(size_t len, v2_d* array) {
+    v2_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v2d_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline v2_d v2d_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v2_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v2d_sub(result, va_arg(args, v2_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v2_d v2da_differnce(size_t len, v2_d* array) {
+    v2_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v2d_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline v2_d v2d_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v2_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v2d_mul(result, va_arg(args, v2_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v2_d v2da_product(size_t len, v2_d* array) {
+    v2_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v2d_mul(result, *array);
+    }
+
+    return result;
+}
+
+static inline v2_d v2d_quotient(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v2_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v2d_div(result, va_arg(args, v2_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v2_d v2da_quotient(size_t len, v2_d* array) {
+    v2_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v2d_div(result, *array);
+    }
+
+    return result;
+}
+
+
 static inline v2_d v2d_proj(v2_d a, v2_d b) {
     double s = v2d_dot(a, b) / v2d_dot(b, b);
     return v2d_muls(b, s);
@@ -1912,7 +2558,7 @@ static inline v3_d v3d(double x, double y, double z) {
     return (v3_d){ .x=x, .y=y, .z=z };
 }
 
-static inline v3_d v3Init(double i) {
+static inline v3_d v3dInit(double i) {
     return (v3_d){ .x=i, .y=i, .z=i };
 }
 
@@ -1980,6 +2626,100 @@ static inline v3_d v3d_divs(v3_d v, double s) {
         .z=(v.z / s),
     };
 }
+
+
+static inline v3_d v3d_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v3_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v3d_add(result, va_arg(args, v3_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v3_d v3da_sum(size_t len, v3_d* array) {
+    v3_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v3d_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline v3_d v3d_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v3_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v3d_sub(result, va_arg(args, v3_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v3_d v3da_differnce(size_t len, v3_d* array) {
+    v3_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v3d_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline v3_d v3d_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v3_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v3d_mul(result, va_arg(args, v3_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v3_d v3da_product(size_t len, v3_d* array) {
+    v3_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v3d_mul(result, *array);
+    }
+
+    return result;
+}
+
+static inline v3_d v3d_quotient(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v3_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v3d_div(result, va_arg(args, v3_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v3_d v3da_quotient(size_t len, v3_d* array) {
+    v3_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v3d_div(result, *array);
+    }
+
+    return result;
+}
+
 
 static inline v3_d v3d_cross(v3_d a, v3_d b) {
     return (v3_d){
@@ -2114,6 +2854,99 @@ static inline v4_d v4d_divs(v4_d v, double s) {
         .z=(v.z / s),
         .w=(v.w / s),
     };
+}
+
+
+static inline v4_d v4d_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v4_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v4d_add(result, va_arg(args, v4_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v4_d v4da_sum(size_t len, v4_d* array) {
+    v4_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v4d_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline v4_d v4d_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v4_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v4d_sub(result, va_arg(args, v4_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v4_d v4da_differnce(size_t len, v4_d* array) {
+    v4_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v4d_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline v4_d v4d_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v4_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v4d_mul(result, va_arg(args, v4_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v4_d v4da_product(size_t len, v4_d* array) {
+    v4_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v4d_mul(result, *array);
+    }
+
+    return result;
+}
+
+static inline v4_d v4d_quotient(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    v4_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = v4d_div(result, va_arg(args, v4_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline v4_d v4da_quotient(size_t len, v4_d* array) {
+    v4_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = v4d_div(result, *array);
+    }
+
+    return result;
 }
 
 
@@ -2267,6 +3100,76 @@ static inline qt_d qtd_divs(qt_d q, double s) {
     };
 }
 
+
+static inline qt_d qtd_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    qt_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = qtd_add(result, va_arg(args, qt_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline qt_d qtda_sum(size_t len, qt_d* array) {
+    qt_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = qtd_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline qt_d qtd_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    qt_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = qtd_sub(result, va_arg(args, qt_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline qt_d qtda_differnce(size_t len, qt_d* array) {
+    qt_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = qtd_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline qt_d qtd_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    qt_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = qtd_mul(result, va_arg(args, qt_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline qt_d qtda_product(size_t len, qt_d* array) {
+    qt_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = qtd_mul(result, *array);
+    }
+
+    return result;
+}
+
 static inline qt_d qtd_sqrt(qt_d q) {
     double qmag = sqrt(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
 
@@ -2370,7 +3273,7 @@ static inline int qtd_isIdentity(qt_d q) {
 // Vector Casting Implementaions
 // -----------------------------
 
-static inline v2_d v3d_do_v2d(v3_d v) {
+static inline v2_d v3d_to_v2d(v3_d v) {
     return v.v2;
 }
 
@@ -2717,6 +3620,76 @@ static inline m4x4_d m4dv_axis(v4_d axis) {
 }
 
 
+static inline m4x4_d m4d_sum(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    m4x4_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = m4d_add(result, va_arg(args, m4x4_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline m4x4_d m4da_sum(size_t len, m4x4_d* array) {
+    m4x4_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = m4d_add(result, *array);
+    }
+
+    return result;
+}
+
+static inline m4x4_d m4d_differnce(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    m4x4_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = m4d_sub(result, va_arg(args, m4x4_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline m4x4_d m4da_differnce(size_t len, m4x4_d* array) {
+    m4x4_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = m4d_sub(result, *array);
+    }
+
+    return result;
+}
+
+static inline m4x4_d m4d_product(int num, ...) {
+    va_list args;
+    va_start(args, num);
+
+    m4x4_d result = { 0 };
+    for (int i = 0; i < num; ++i) {
+        result = m4d_mul(result, va_arg(args, m4x4_d));
+    }
+
+    va_end(args);
+    return result;
+}
+
+static inline m4x4_d m4da_product(size_t len, m4x4_d* array) {
+    m4x4_d result = { 0 };
+    void* end;
+    for (end = &array[len-1]; array != end; ++array) {
+        result = m4d_mul(result, *array);
+    }
+
+    return result;
+}
+
+
 static inline m4x4_d m4d_transpose(m4x4_d m) {
     return (m4x4_d){
         .x0=m.x0, .y0=m.x1, .z0=m.x2, .w0=m.x3,
@@ -2726,7 +3699,7 @@ static inline m4x4_d m4d_transpose(m4x4_d m) {
     };
 }
 
-static inline m4x4_d m4d_add(m4x4_d a, m4x4_t b) {
+static inline m4x4_d m4d_add(m4x4_d a, m4x4_d b) {
     return (m4x4_d){
         .x0 = a.x0 + b.x0, .x1 = a.x1 + b.x1, .x2 = a.x2 + b.x2, .x3 = a.x3 + b.x3,
         .y0 = a.y0 + b.y0, .y1 = a.y1 + b.y1, .y2 = a.y2 + b.y2, .y3 = a.y3 + b.y3,
@@ -2813,7 +3786,7 @@ static inline m4x4_d m4d_lerp(m4x4_d a, m4x4_d b, double t) {
 }
 
 
-static inline v4_d m4d_mulv2(m4x4_t m, v2_d v) {
+static inline v4_d m4d_mulv2(m4x4_d m, v2_d v) {
     return (v4_d){
         .x = v.x * m.x0 + v.y * m.x1,
         .y = v.x * m.y0 + v.y * m.y1,
@@ -2822,7 +3795,7 @@ static inline v4_d m4d_mulv2(m4x4_t m, v2_d v) {
     };
 }
 
-static inline v4_d m4d_mulv3(m4x4_t m, v3_d v) {
+static inline v4_d m4d_mulv3(m4x4_d m, v3_d v) {
     return (v4_d){
         .x = v.x * m.x0 + v.y * m.x1 + v.z * m.x2,
         .y = v.x * m.y0 + v.y * m.y1 + v.z * m.y2,
