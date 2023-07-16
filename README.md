@@ -138,10 +138,8 @@ All functions are prefixed with the type they operate on (with expection to the 
 
 ### Misc Functions
 
-<details>
-
 #### Linear Interpolation
-
+<details>
 <summary>Linear Interpolation</summary>
 
 ```c
