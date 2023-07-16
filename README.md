@@ -132,20 +132,28 @@ OpenGL expects a matrix to be in column-major order. Thus there is no need to tr
 |             |                       |
 | Elements    | `float x0, x1, x2, x3;` <br> `float y0, y1, y2, y3;` <br> `float z0, z1, z2, z3;` <br> `float w0, w1, w2, w3;`|
 
-## Functions
+# Functions
 
 All functions are prefixed with the type they operate on (with expection to the misc functions). If they operate on doubles then there will be a `d` after the type. For example: `v2_add` for floats and `v2d_add` for doubles. Some functions will also have a `v` or an `a` attached. `m4_translation` and `m4v_translation` are identical functions, only that `m4v` means it takes in a vector. This does get a little ugly. For example `m4dv_translation`, but for now this isn't subject to change.
 
 ### Misc Functions
 
+<details>
+
+<summary>Linear Interpolation</summary>
+
 #### Linear Interpolation
 ```c
-float lerpf(float a, float b, float t);
+float  lerpf(float a, float b, float t);
+double lerp(double a, double b, double t)
 ```
-Standard lerp function. Returns 
+Standard lerp function. Returns a number that is between `a` and `b`. `t` being how far from `a` to "walk" to `b`
 
-### 2D Vector Functions
-### 3D Vector Functions
-### 4D Vector Functions
-### Quaternion Functions
-### Matrix Functoins
+</details>
+
+## 2D Vector Functions
+
+### Vector 2D
+
+
+### Vector Addition
