@@ -157,8 +157,8 @@ static inline float lerpf(float a, float b, float t);
 // decorations
 // ---------------------------------------
 
-static inline v2_t v2(float x, float y); /* Returns a 2D Vector */
-static inline v2_t v2Init(float i); /* Returns vector initalized to i */
+static inline v2_t vec2(float x, float y); /* Returns a 2D Vector */
+static inline v2_t vec2Init(float i); /* Returns vector initalized to i */
 
 static inline v2_t v2_add(v2_t a, v2_t b);   /* Pair-wise addition */
 static inline v2_t v2_adds(v2_t v, float s); /* Adds s to all fields */
@@ -458,11 +458,11 @@ static inline float lerpf(float a, float b, float t) {
 // 2D Vectors Implementaions
 // -------------------------
 
-static inline v2_t v2(float x, float y) {
+static inline v2_t vec2(float x, float y) {
     return (v2_t){ .x=x, .y=y };
 }
 
-static inline v2_t v2Init(float i) {
+static inline v2_t vec2Init(float i) {
     return (v2_t){ .x=i, .y=i };
 }
 
@@ -2099,8 +2099,8 @@ static inline double lerp(double a, double b, double t);
 // decorations
 // ---------------------------------------
 
-static inline v2_d v2d(double x, double y); /* Returns a 2D Vector */
-static inline v2_d v2dInit(double i);       /* Returns vector initalized to i */
+static inline v2_d vec2d(double x, double y); /* Returns a 2D Vector */
+static inline v2_d vec2dInit(double i);       /* Returns vector initalized to i */
 
 static inline v2_d v2d_add(v2_d a, v2_d b);    /* Pair-wise addition */
 static inline v2_d v2d_adds(v2_d v, double s); /* Adds s to all fields */
@@ -2356,11 +2356,11 @@ static inline double lerp(double a, double b, double t) {
 // 2D Vectors Implementaions
 // -------------------------
 
-static inline v2_d v2d(double x, double y) {
+static inline v2_d vec2d(double x, double y) {
     return (v2_d){ .x=x, .y=y };
 }
 
-static inline v2_d v2dInit(double i) {
+static inline v2_d vec2dInit(double i) {
     return (v2_d){ .x=i, .y=i };
 }
 
