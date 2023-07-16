@@ -138,14 +138,12 @@ All functions are prefixed with the type they operate on (with expection to the 
 
 ### Misc Functions
 
-#### Linear Interpolation
-<details>
-<summary>Linear Interpolation</summary>
-
 ```c
 float  lerpf(float a, float b, float t);
 double lerp(double a, double b, double t)
 ```
+<details>
+<summary>Linear Interpolation</summary>
 
 Standard lerp function. Returns a number that is between `a` and `b`. `t` being how far from `a` to "walk" to `b`
 
