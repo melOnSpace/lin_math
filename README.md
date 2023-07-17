@@ -545,14 +545,15 @@ Returns $ln(q)$. If other log bases are wanted then one could do this:
 
 $$p = \log_b(q)$$
 $$p = \frac{ln(q)}{ln(b)}$$
-$$p = (ln(q))^{-1} * ln(b)$$
+$$p = (ln(b))^{-1} * ln(q)$$
 Where q, b, and p are all quaternions
 
 ```c
-// Log base 10 + 0i + 0j + 0k
-qt_t a;
-qt_t b = quat(10.0f, 0.0f, 0.0f, 0.0f);
-qt_t result = qt_mul(qt_inverse(qt_ln(a)), qt_ln(b));
+// Example function. This in not in the library
+qt_t qt_log(qt_t q, qt_t base) {
+    qt_t ilog_base = qt_inverse(qt_ln(base));
+    return qt_mul(ilog_base, qt_ln(q));
+}
 ```
 
 [Yet another Wikipedia Article.](https://en.wikipedia.org/wiki/Quaternion#Exponential,_logarithm,_and_power_functions)
@@ -562,4 +563,4 @@ qt_t result = qt_mul(qt_inverse(qt_ln(a)), qt_ln(b));
 #### Quaternion Raised to a Real Number
 ```c
 qt_t qt_pows(qt_t q, float s);
-`````
+```
