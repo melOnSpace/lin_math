@@ -276,6 +276,7 @@ v4_t v4_project(v4_t a, v4_t b);
 ```
 <details>
 <summary>Description</summary>
+
 Projects vector `a` onto `b`. A common explanation is to think of vector `a` casting a shadow onto `b`.
 
 [Better Explanation that what I just gave (i.e., Wikipedia)](https://en.wikipedia.org/wiki/Vector_projection)
@@ -292,6 +293,7 @@ v4_t v4_normAxis(v4_t v); v4_t v4_fastnormAxis(v4_t v);
 ```
 <details>
 <summary>Description</summary>
+
 A normalize function returns a vector pointing in the same direction but with a length always of 1
 The difference between `norm` and `fastnorm` is the square-root operator they both use. The norm fucntion uses `math.h sqrtf()`; fast_norm uses the `fast_rsqrtf()` function.
 
@@ -309,6 +311,7 @@ v4_t v4_lerp(v4_t a, v4_t b, float t);
 ```
 <details>
 <summary>Description</summary>
+
 Standard lerp function. Returns a number that is between `a` and `b`. `t` being how far from `a` to "walk" to `b`
 
 [Wikipedia Article about linear interpolation](https://en.wikipedia.org/wiki/Linear_interpolation)
@@ -321,6 +324,7 @@ v3_t v3_cross(v3_t a, v3_t b);
 ```
 <details>
 <summary>Description</summary>
+
 Note that there is only a 3D vector cross product. That is because the cross product does not exist for 2D or 4D vectors. If the cross product of two axis angles are wanted, one can do this: `v3_t new_angle = v3_cross(axis_a.axis, axis_b.axis);`
 
 [Wikipedia Article about cross product](https://en.wikipedia.org/wiki/Cross_product)
@@ -339,6 +343,7 @@ v4_t v4_dist(v4_t a, v4_t b);  v4_t v4_fastdist(v4_t a, v4_t b);
 ```
 <details>
 <summary>Description</summary>
+
 There are two types of functions for getting the magnitude of a vector; both of which have fast variants. 
 
 |**Function**|**Description**             |**Fast Variant**                      |
