@@ -331,6 +331,19 @@ Note that there is only a 3D vector cross product. That is because the cross pro
 
 </details>
 
+#### Dot Product
+```c
+float v2_dot(v2_t a, v2_t b);
+float v3_dot(v3_t a, v3_t b);
+float v4_dot(v4_t a, v4_t b);
+```
+<details>
+<summary>Description</summary>
+
+[Wikipedia Article about Dot Product](https://en.wikipedia.org/wiki/Dot_product)
+
+</details>
+
 #### Vector Magnitude (i.e., Length of Vectors)
 ```c
 v2_t v2_mag(v2_t v);           v2_t v2_fastmag(v2_t v);
@@ -350,5 +363,20 @@ There are two types of functions for getting the magnitude of a vector; both of 
 |:---------- |:-------------------------- |:------------------------------------ |
 |`mag`       | The length of vector `v`   | The length<sup>2</sup> of vector `v` |
 |`dist`      | Short-hand for `mag(a - b)`| Short-hand for `fastmag(a - b)`      |
+
+</details>
+
+#### Angle Between Vectors
+```c
+v2_t v2_angle(v2_t a, v2_t b);
+v3_t v3_angle(v3_t a, v3_t b);
+v4_t v4_angle(v4_t a, v4_t b);
+```
+<details>
+<summary>Description</summary>
+
+Returns the angle between vectors `a` and `b`. For example: the angle between `{ 1.0, 0.0 }` and `{ 0.0, 1.0 }` is $`π / 2$`
+
+Like all functions in this library, angles are expressed in radians
 
 </details>
