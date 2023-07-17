@@ -485,7 +485,7 @@ qt_t qt_add(qt_t a, qt_t b);
 qt_t qt_sub(qt_t a, qt_t b);
 qt_t qt_mul(qt_t a, qt_t b);
 ```
-- Note the lack of Quaternion division. This is deliberate. For quaternion division: $Q = p/q$ is the same as $Q = p^{-1}q$
+- Note the lack of Quaternion division. This is deliberate. For quaternion division: $Q = p/q$ is the same as $Q = p^(-1) * q$
 
 #### Scalar Operators
 ```c
@@ -495,7 +495,7 @@ qt_t qt_muls(qt_t q, float s);
 qt_t qt_divs(qt_t q, float s);
 ```
 
-#### Variant and Array Functions
+#### Variatic and Array Functions
 ```c
 qt_t qt_sum(int num, ...); /* Addition */
 qt_t qt_difference(int num, ...); /* Subtraction */
@@ -507,3 +507,53 @@ qt_t qt_product_array(size_t len, qt_t* array); /* Muliplication */
 ```
 - Variatic functions take `num`, which must be the amount of quaternions passed
 - Array functions are implemented via loops that iterate over `array`. Be careful to pass the correct `len`, *especially* if `array` is allocated on the stack!
+
+#### ***Other Quaternion Arithmetic***
+
+#### Square Root
+```c
+qt_t qt_sqrt(qt_t q);
+```
+<details>
+<summary>Description</summary>
+
+Returns the square root of `q`. Note that the return is a quaternion. [For more info about taking square roots of complex numbers.](https://en.wikipedia.org/wiki/Quaternion#Square_roots_of_arbitrary_quaternions)
+
+</details>
+
+#### Exponential
+```c
+qt_t qt_exp(qt_t q);
+```
+<details>
+<summary>Description</summary>
+
+Returns $e^q$
+
+[Here is a Wikipedia Article about the topic.](https://en.wikipedia.org/wiki/Quaternion#Exponential,_logarithm,_and_power_functions)
+
+</details>
+
+#### Natural Logarithm
+```c
+qt_t qt_ln(qt_t q);
+```
+<details>
+<summary>Description</summary>
+
+Returns $ln(q)$. If other log bases are wanted then one could do this: $p = \log_b(q)$ -> $p = \frac{ln(q)}{ln(b)}$
+```c
+// Log base 10 + 0i + 0j + 0k
+qt_t a;
+qt_t b = quat(10.0f, 0.0f, 0.0f, 0.0f);
+qt_t result = qt_mul(qt_inverse(qt_ln(a)), qt_ln(b));
+```
+
+[Yet another Wikipedia Article.](https://en.wikipedia.org/wiki/Quaternion#Exponential,_logarithm,_and_power_functions)
+
+</details>
+
+#### Quaternion Raised to a Real Number
+```c
+qt_t qt_pows(qt_t q, float s);
+```
