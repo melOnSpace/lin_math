@@ -166,24 +166,34 @@ Standard lerp function. Returns a number that is between `a` and `b`. `t` being 
 
 </details>
 
-#### ***Casting from Type<sub>A</sub> to Type<sub>B</sub>***
+#### ***Casting from Type A to Type B***
 
 #### Cast to 2D Vector
 ```c
 v2_t v3_to_v2(v3_t v);
 v2_t v4_to_v2(v4_t v);
+v2_t qt_to_v2(qt_t q);
 ```
 
 #### Cast to 3D Vector
 ```c
 v3_t v2_to_v3(v2_t v);
 v3_t v4_to_v3(v4_t v);
+v3_t qt_to_v3(qt_t q);
 ```
 
 #### Cast to 4D Vector
 ```c
 v4_t v2_to_v4(v2_t v);
 v4_t v3_to_v4(v3_t v);
+v4_t qt_to_v4(qt_t q);
+```
+
+#### Cast to Quaternion
+```c
+qt_t v2_to_qt(v2_t v);
+qt_t v3_to_qt(v3_t v);
+qt_t v4_to_qt(v4_t v);
 ```
 
 #### ***Printing Types with `printf`***
@@ -307,19 +317,20 @@ v2_t v2_sum_array(size_t len, v2_t* array); /* Addition */
 v3_t v3_sum_array(size_t len, v3_t* array);
 v4_t v4_sum_array(size_t len, v4_t* array);
 
-v2_t v2_difference_array(size_t len, v2_t* array); /* Addition */
+v2_t v2_difference_array(size_t len, v2_t* array); /* Subtraction */
 v3_t v3_difference_array(size_t len, v3_t* array);
 v4_t v4_difference_array(size_t len, v4_t* array);
 
-v2_t v2_product_array(size_t len, v2_t* array); /* Addition */
+v2_t v2_product_array(size_t len, v2_t* array); /* Multiplication */
 v3_t v3_product_array(size_t len, v3_t* array);
 v4_t v4_product_array(size_t len, v4_t* array);
 
-v2_t v2_quotient_array(size_t len, v2_t* array); /* Addition */
+v2_t v2_quotient_array(size_t len, v2_t* array); /* Division */
 v3_t v3_quotient_array(size_t len, v3_t* array);
 v4_t v4_quotient_array(size_t len, v4_t* array);
 ```
 - These functions are implemented via loops that iterate over `array`. Be careful to pass the correct `len`, *especially* if `array` is allocated on the stack!
+
 #### ***Other 2D Vector Arithmetic***
 
 #### Projection
@@ -456,14 +467,43 @@ Floating point numbers are weird, so it is often easier to compare to a number c
 #### ***Quaternion Builder***
 ```c
 qt_t quat(float r, float i, float j, float k);
-qt_t quatv(v4_t v);
 qt_t quatInit(float i);
 ```
 <details>
 <summary>Description</summary>
 
 `quat` returns a quaternion from `r`, `i`, `j`, `k`.
-`quatv` converts a 4D vector to a quaternion.
 `quatInit` returns a quaternion with all fields set to `i`.
 
 </details>
+
+#### ***Quaternion Arithmetic***
+
+#### Pair-Wise Operators
+```c
+qt_t qt_add(qt_t a, qt_t b);
+qt_t qt_sub(qt_t a, qt_t b);
+qt_t qt_mul(qt_t a, qt_t b);
+```
+- Note the lack of Quaternion division. This is deliberate. For quaternion division: $Q = p/q$ is the same as $Q = p^-1 * q$
+
+#### Scalar Operators
+```c
+qt_t qt_adds(qt_t q, float s);
+qt_t qt_subs(qt_t q, float s);
+qt_t qt_muls(qt_t q, float s);
+qt_t qt_divs(qt_t q, float s);
+```
+
+#### Variant and Array Functions
+```c
+qt_t qt_sum(int num, ...); /* Addition */
+qt_t qt_difference(int num, ...); /* Subtraction */
+qt_t qt_product(int num, ...); /* Muliplication */
+
+qt_t qt_sum_array(size_t len, qt_t* array); /* Addition */
+qt_t qt_difference_array(size_t len, qt_t* array); /* Subtraction */
+qt_t qt_product_array(size_t len, qt_t* array); /* Muliplication */
+```
+- Variatic functions take `num`, which must be the amount of quaternions passed
+- Array functions are implemented via loops that iterate over `array`. Be careful to pass the correct `len`, *especially* if `array` is allocated on the stack!
