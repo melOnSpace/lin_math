@@ -151,6 +151,7 @@ typedef union {
 // vectors or matrixies
 // ---------------------------------------
 
+static inline float fast_rsqrtf(float number);
 static inline float lerpf(float a, float b, float t);
 
 // 2D Vector functions! These are just the
@@ -169,17 +170,18 @@ static inline v2_t v2_muls(v2_t v, float s); /* Muls s to all fields */
 static inline v2_t v2_div(v2_t a, v2_t b);   /* Pair-wise division */
 static inline v2_t v2_divs(v2_t v, float s); /* Divs s to all fields */
 
-static inline v2_t v2_sum(int num, ...);                   /* Variatic addition */
-static inline v2_t v2a_sum(size_t len, v2_t* array);       /* Sumation of an array */
-static inline v2_t v2_differnce(int num, ...);             /* Variatic subtraction */
-static inline v2_t v2a_differnce(size_t len, v2_t* array); /* Difference of an array */
-static inline v2_t v2_product(int num, ...);               /* Variatic multiplication */
-static inline v2_t v2a_product(size_t len, v2_t* array);   /* Product of an array */
-static inline v2_t v2_quotient(int num, ...);              /* Variatic division */
-static inline v2_t v2a_quotient(size_t len, v2_t* array);  /* Quotient of an array */
+static inline v2_t v2_sum(int num, ...);                        /* Variatic addition */
+static inline v2_t v2_sum_array(size_t len, v2_t* array);       /* Sumation of an array */
+static inline v2_t v2_differnce(int num, ...);                  /* Variatic subtraction */
+static inline v2_t v2_differnce_array(size_t len, v2_t* array); /* Difference of an array */
+static inline v2_t v2_product(int num, ...);                    /* Variatic multiplication */
+static inline v2_t v2_product_array(size_t len, v2_t* array);   /* Product of an array */
+static inline v2_t v2_quotient(int num, ...);                   /* Variatic division */
+static inline v2_t v2_quotient_array(size_t len, v2_t* array);  /* Quotient of an array */
 
 static inline v2_t v2_proj(v2_t a, v2_t b);          /* Project a onto b */
 static inline v2_t v2_norm(v2_t v);                  /* Normalize v */
+static inline v2_t v2_fastnorm(v2_t v);              /* Fast Normalize. Same as norm but with some margin of error */
 static inline v2_t v2_lerp(v2_t a, v2_t b, float t); /* linear interp */
 
 static inline float v2_mag(v2_t v);              /* Magnitude of v */
@@ -211,18 +213,19 @@ static inline v3_t v3_muls(v3_t v, float s); /* Muls s to all fields */
 static inline v3_t v3_div(v3_t a, v3_t b);   /* Pair-wise division */
 static inline v3_t v3_divs(v3_t v, float s); /* Divs s to all fields */
 
-static inline v3_t v3_sum(int num, ...);                   /* Variatic addition */
-static inline v3_t v3a_sum(size_t len, v3_t* array);       /* Sumation of an array */
-static inline v3_t v3_differnce(int num, ...);             /* Variatic subtraction */
-static inline v3_t v3a_differnce(size_t len, v3_t* array); /* Difference of an array */
-static inline v3_t v3_product(int num, ...);               /* Variatic multiplication */
-static inline v3_t v3a_product(size_t len, v3_t* array);   /* Product of an array */
-static inline v3_t v3_quotient(int num, ...);              /* Variatic division */
-static inline v3_t v3a_quotient(size_t len, v3_t* array);  /* Quotient of an array */
+static inline v3_t v3_sum(int num, ...);                        /* Variatic addition */
+static inline v3_t v3_sum_array(size_t len, v3_t* array);       /* Sumation of an array */
+static inline v3_t v3_differnce(int num, ...);                  /* Variatic subtraction */
+static inline v3_t v3_differnce_array(size_t len, v3_t* array); /* Difference of an array */
+static inline v3_t v3_product(int num, ...);                    /* Variatic multiplication */
+static inline v3_t v3_product_array(size_t len, v3_t* array);   /* Product of an array */
+static inline v3_t v3_quotient(int num, ...);                   /* Variatic division */
+static inline v3_t v3_quotient_array(size_t len, v3_t* array);  /* Quotient of an array */
 
 static inline v3_t v3_cross(v3_t a, v3_t b);         /* Cross-Product of a and b */
 static inline v3_t v3_proj(v3_t a, v3_t b);          /* Project a onto b */
 static inline v3_t v3_norm(v3_t v);                  /* Normalize v */
+static inline v3_t v3_fastnorm(v3_t v);              /* Fast Normalize. Same as norm but with some margin of error */
 static inline v3_t v3_lerp(v3_t a, v3_t b, float t); /* linear interp */
 
 static inline float v3_mag(v3_t v);              /* Magnitude of v */
@@ -254,18 +257,20 @@ static inline v4_t v4_muls(v4_t v, float s); /* Muls s to all fields */
 static inline v4_t v4_div(v4_t a, v4_t b);   /* Pair-wise division */
 static inline v4_t v4_divs(v4_t v, float s); /* Divs s to all fields */
 
-static inline v4_t v4_sum(int num, ...);                   /* Variatic addition */
-static inline v4_t v4a_sum(size_t len, v4_t* array);       /* Sumation of an array */
-static inline v4_t v4_differnce(int num, ...);             /* Variatic subtraction */
-static inline v4_t v4a_differnce(size_t len, v4_t* array); /* Difference of an array */
-static inline v4_t v4_product(int num, ...);               /* Variatic multiplication */
-static inline v4_t v4a_product(size_t len, v4_t* array);   /* Product of an array */
-static inline v4_t v4_quotient(int num, ...);              /* Variatic division */
-static inline v4_t v4a_quotient(size_t len, v4_t* array);  /* Quotient of an array */
+static inline v4_t v4_sum(int num, ...);                        /* Variatic addition */
+static inline v4_t v4_sum_array(size_t len, v4_t* array);       /* Sumation of an array */
+static inline v4_t v4_differnce(int num, ...);                  /* Variatic subtraction */
+static inline v4_t v4_differnce_array(size_t len, v4_t* array); /* Difference of an array */
+static inline v4_t v4_product(int num, ...);                    /* Variatic multiplication */
+static inline v4_t v4_product_array(size_t len, v4_t* array);   /* Product of an array */
+static inline v4_t v4_quotient(int num, ...);                   /* Variatic division */
+static inline v4_t v4_quotient_array(size_t len, v4_t* array);  /* Quotient of an array */
 
 static inline v4_t v4_proj(v4_t a, v4_t b);          /* Project a onto b */
 static inline v4_t v4_norm(v4_t v);                  /* Normalize v */
+static inline v4_t v4_fastnorm(v4_t v);              /* Fast Normalize. Same as norm but with some margin of error */
 static inline v4_t v4_normAxis(v4_t v);              /* Normalize only v.axis */
+static inline v4_t v4_fastnormAxis(v4_t v);          /* Fast Normalize. Same as normAxis but with some margin of error */
 static inline v4_t v4_lerp(v4_t a, v4_t b, float t); /* linear interp */
 
 static inline float v4_mag(v4_t v);              /* Magnitude of v */
@@ -301,12 +306,12 @@ static inline qt_t qt_mul(qt_t a, qt_t b);   /* Quaternion multiplication */
 static inline qt_t qt_muls(qt_t q, float s); /* Muls s to all fields */
 static inline qt_t qt_divs(qt_t q, float s); /* Divs s to all fields */
 
-static inline qt_t qt_sum(int num, ...);                   /* Variatic addition */
-static inline qt_t qta_sum(size_t len, qt_t* array);       /* Sumation of an array */
-static inline qt_t qt_differnce(int num, ...);             /* Variatic subtraction */
-static inline qt_t qta_differnce(size_t len, qt_t* array); /* Difference of an array */
-static inline qt_t qt_product(int num, ...);               /* Variatic multiplication */
-static inline qt_t qta_product(size_t len, qt_t* array);   /* Product of an array */
+static inline qt_t qt_sum(int num, ...);                        /* Variatic addition */
+static inline qt_t qt_sum_array(size_t len, qt_t* array);       /* Sumation of an array */
+static inline qt_t qt_differnce(int num, ...);                  /* Variatic subtraction */
+static inline qt_t qt_differnce_array(size_t len, qt_t* array); /* Difference of an array */
+static inline qt_t qt_product(int num, ...);                    /* Variatic multiplication */
+static inline qt_t qt_product_array(size_t len, qt_t* array);   /* Product of an array */
 
 static inline qt_t qt_sqrt(qt_t q); /* Square-Root of a quaternion */
 static inline qt_t qt_exp(qt_t q);  /* Exponential of a quaternion */
@@ -317,6 +322,7 @@ static inline qt_t qt_conjugate(qt_t q);     /* q* = q.r - q.i - q.j - q.k */
 static inline qt_t qt_inverse(qt_t q);       /* q^-1 = q* / qt_fastmag(q) */
 static inline qt_t qt_cross(qt_t a, qt_t b); /* Cross product of a quaternion */
 static inline qt_t qt_norm(qt_t q);          /* Normalize q */
+static inline qt_t qt_fastnorm(qt_t q);      /* Fast Normalize. Same as norm but with some margin of error */
 static inline qt_t qt_lerp(qt_t a, qt_t b, float t);  /* linear interp */
 static inline qt_t qt_slerp(qt_t a, qt_t b, float t); /* spherical interp */
 
@@ -400,12 +406,12 @@ static inline m4x4_t m4_mul(m4x4_t a, m4x4_t b); /* Matrix multiplication */
 static inline m4x4_t m4_muls(m4x4_t m, float s); /* Muls s to all fields */
 static inline m4x4_t m4_divs(m4x4_t m, float s); /* Divs s to all fields */
 
-static inline m4x4_t m4_sum(int num, ...);                     /* Variatic addition */
-static inline m4x4_t m4a_sum(size_t len, m4x4_t* array);       /* Sumation of an array */
-static inline m4x4_t m4_differnce(int num, ...);               /* Variatic subtraction */
-static inline m4x4_t m4a_differnce(size_t len, m4x4_t* array); /* Difference of an array */
-static inline m4x4_t m4_product(int num, ...);                 /* Variatic multiplication */
-static inline m4x4_t m4a_product(size_t len, m4x4_t* array);   /* Product of an array */
+static inline m4x4_t m4_sum(int num, ...);                          /* Variatic addition */
+static inline m4x4_t m4_sum_array(size_t len, m4x4_t* array);       /* Sumation of an array */
+static inline m4x4_t m4_differnce(int num, ...);                    /* Variatic subtraction */
+static inline m4x4_t m4_differnce_array(size_t len, m4x4_t* array); /* Difference of an array */
+static inline m4x4_t m4_product(int num, ...);                      /* Variatic multiplication */
+static inline m4x4_t m4_product_array(size_t len, m4x4_t* array);   /* Product of an array */
 
 // This is mostly a joke function. Like, why lerp a matrix?
 static inline m4x4_t m4_lerp(m4x4_t a, m4x4_t b, float t);
@@ -450,6 +456,22 @@ static inline v4_t m4_v4mul(v4_t v, m4x4_t m); /* new_v = v*M */
 
 // Help Function Implementaions
 // ----------------------------
+
+static inline float fast_rsqrtf(float number) {
+    long i;
+    float x2, y;
+    const float threehalfs = 1.5f;
+
+    x2 = number * 0.5;
+    y = number;
+    i = *(long*)&y;
+    i = 0x5f3759df - (i >> i);
+    y = *(float*)&i;
+    y = y * (threehalfs - (x2 * y * y));
+    // y = y * (threehalfs - (x2 * y * y)); // enable if need more accuracy
+
+    return y;
+}
 
 static inline float lerpf(float a, float b, float t) {
     return a * (1.0f - t) + b * t;
@@ -537,7 +559,7 @@ static inline v2_t v2_sum(int num, ...) {
     return result;
 }
 
-static inline v2_t v2a_sum(size_t len, v2_t* array) {
+static inline v2_t v2_sum_array(size_t len, v2_t* array) {
     v2_t result = { .x=0.0f, .y=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -560,7 +582,7 @@ static inline v2_t v2_differnce(int num, ...) {
     return result;
 }
 
-static inline v2_t v2a_differnce(size_t len, v2_t* array) {
+static inline v2_t v2_differnce_array(size_t len, v2_t* array) {
     v2_t result = { .x=0.0f, .y=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -583,7 +605,7 @@ static inline v2_t v2_product(int num, ...) {
     return result;
 }
 
-static inline v2_t v2a_product(size_t len, v2_t* array) {
+static inline v2_t v2_product_array(size_t len, v2_t* array) {
     v2_t result = { .x=0.0f, .y=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -606,7 +628,7 @@ static inline v2_t v2_quotient(int num, ...) {
     return result;
 }
 
-static inline v2_t v2a_quotient(size_t len, v2_t* array) {
+static inline v2_t v2_quotient_array(size_t len, v2_t* array) {
     v2_t result = { .x=0.0f, .y=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -624,6 +646,14 @@ static inline v2_t v2_proj(v2_t a, v2_t b) {
 
 static inline v2_t v2_norm(v2_t v) {
     return v2_divs(v, v2_mag(v));
+}
+
+static inline v2_t v2_fastnorm(v2_t v) {
+    float fast_mag = fast_rsqrtf(v.x * v.x + v.y * v.y);
+    return (v2_t){
+        .x = v.x * fast_mag,
+        .y = v.y * fast_mag,
+    };
 }
 
 static inline v2_t v2_lerp(v2_t a, v2_t b, float t) {
@@ -750,7 +780,7 @@ static inline v3_t v3_sum(int num, ...) {
     return result;
 }
 
-static inline v3_t v3a_sum(size_t len, v3_t* array) {
+static inline v3_t v3_sum_array(size_t len, v3_t* array) {
     v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -773,7 +803,7 @@ static inline v3_t v3_differnce(int num, ...) {
     return result;
 }
 
-static inline v3_t v3a_differnce(size_t len, v3_t* array) {
+static inline v3_t v3_differnce_array(size_t len, v3_t* array) {
     v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -796,7 +826,7 @@ static inline v3_t v3_product(int num, ...) {
     return result;
 }
 
-static inline v3_t v3a_product(size_t len, v3_t* array) {
+static inline v3_t v3_product_array(size_t len, v3_t* array) {
     v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -819,7 +849,7 @@ static inline v3_t v3_quotient(int num, ...) {
     return result;
 }
 
-static inline v3_t v3a_quotient(size_t len, v3_t* array) {
+static inline v3_t v3_quotient_array(size_t len, v3_t* array) {
     v3_t result = { .x=0.0f, .y=0.0f, .z=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -845,6 +875,15 @@ static inline v3_t v3_proj(v3_t a, v3_t b) {
 
 static inline v3_t v3_norm(v3_t v) {
     return v3_divs(v, v3_mag(v));
+}
+
+static inline v3_t v3_fastnorm(v3_t v) {
+    float fast_mag = fast_rsqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    return (v3_t){
+        .x = v.x * fast_mag,
+        .y = v.y * fast_mag,
+        .z = v.z * fast_mag,
+    };
 }
 
 static inline v3_t v3_lerp(v3_t a, v3_t b, float t) {
@@ -979,7 +1018,7 @@ static inline v4_t v4_sum(int num, ...) {
     return result;
 }
 
-static inline v4_t v4a_sum(size_t len, v4_t* array) {
+static inline v4_t v4_sum_array(size_t len, v4_t* array) {
     v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -1002,7 +1041,7 @@ static inline v4_t v4_differnce(int num, ...) {
     return result;
 }
 
-static inline v4_t v4a_differnce(size_t len, v4_t* array) {
+static inline v4_t v4_differnce_array(size_t len, v4_t* array) {
     v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -1025,7 +1064,7 @@ static inline v4_t v4_product(int num, ...) {
     return result;
 }
 
-static inline v4_t v4a_product(size_t len, v4_t* array) {
+static inline v4_t v4_product_array(size_t len, v4_t* array) {
     v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -1048,7 +1087,7 @@ static inline v4_t v4_quotient(int num, ...) {
     return result;
 }
 
-static inline v4_t v4a_quotient(size_t len, v4_t* array) {
+static inline v4_t v4_quotient_array(size_t len, v4_t* array) {
     v4_t result = { .x=0.0f, .y=0.0f, .z=0.0f, .w=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -1068,10 +1107,30 @@ static inline v4_t v4_norm(v4_t v) {
     return v4_divs(v, v4_mag(v));
 }
 
+static inline v4_t v4_fastnorm(v4_t v) {
+    float fast_mag = fast_rsqrtf(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
+    return (v4_t){
+        .x = v.x * fast_mag,
+        .y = v.y * fast_mag,
+        .z = v.z * fast_mag,
+        .w = v.w * fast_mag,
+    };
+}
+
 static inline v4_t v4_normAxis(v4_t v) {
     return (v4_t){
         .angle = v.angle,
         .axis = v3_norm(v.axis),
+    };
+}
+
+static inline v4_t v4_fastnormAxis(v4_t v) {
+    float fast_mag = fast_rsqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    return (v4_t){
+        .x = v.x * fast_mag,
+        .y = v.y * fast_mag,
+        .z = v.z * fast_mag,
+        .angle = v.angle,
     };
 }
 
@@ -1223,7 +1282,7 @@ static inline qt_t qt_sum(int num, ...) {
     return result;
 }
 
-static inline qt_t qta_sum(size_t len, qt_t* array) {
+static inline qt_t qt_sum_array(size_t len, qt_t* array) {
     qt_t result = { .r=0.0f, .i=0.0f, .j=0.0f, .k=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -1246,7 +1305,7 @@ static inline qt_t qt_differnce(int num, ...) {
     return result;
 }
 
-static inline qt_t qta_differnce(size_t len, qt_t* array) {
+static inline qt_t qt_differnce_array(size_t len, qt_t* array) {
     qt_t result = { .r=0.0f, .i=0.0f, .j=0.0f, .k=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -1269,7 +1328,7 @@ static inline qt_t qt_product(int num, ...) {
     return result;
 }
 
-static inline qt_t qta_product(size_t len, qt_t* array) {
+static inline qt_t qt_product_array(size_t len, qt_t* array) {
     qt_t result = { .r=0.0f, .i=0.0f, .j=0.0f, .k=0.0f };
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -1339,6 +1398,16 @@ static inline qt_t qt_norm(qt_t q) {
         .i = q.i / qmag,
         .j = q.j / qmag,
         .k = q.k / qmag,
+    };
+}
+
+static inline qt_t qt_fastnorm(qt_t q) {
+    float fast_qmag = fast_rsqrtf(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+    return (qt_t){
+        .r = q.r / fast_qmag,
+        .i = q.i / fast_qmag,
+        .j = q.j / fast_qmag,
+        .k = q.k / fast_qmag,
     };
 }
 
@@ -1892,7 +1961,7 @@ static inline m4x4_t m4_sum(int num, ...) {
     return result;
 }
 
-static inline m4x4_t m4a_sum(size_t len, m4x4_t* array) {
+static inline m4x4_t m4_sum_array(size_t len, m4x4_t* array) {
     m4x4_t result = {0};
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -1915,7 +1984,7 @@ static inline m4x4_t m4_differnce(int num, ...) {
     return result;
 }
 
-static inline m4x4_t m4a_differnce(size_t len, m4x4_t* array) {
+static inline m4x4_t m4_differnce_array(size_t len, m4x4_t* array) {
     m4x4_t result = {0};
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -1938,7 +2007,7 @@ static inline m4x4_t m4_product(int num, ...) {
     return result;
 }
 
-static inline m4x4_t m4a_product(size_t len, m4x4_t* array) {
+static inline m4x4_t m4_product_array(size_t len, m4x4_t* array) {
     m4x4_t result = {0};
     void* end;
     for (end = &array[len-1]; array != end; ++array) {
@@ -2093,6 +2162,7 @@ typedef union {
 // vectors or matrixies
 // ---------------------------------------
 
+static inline double fast_rsqrt(double number);
 static inline double lerp(double a, double b, double t);
 
 // 2D Vector functions! These are just the
@@ -2122,6 +2192,7 @@ static inline v2_d v2da_quotient(size_t len, v2_d* array);  /* Quotient of an ar
 
 static inline v2_d v2d_proj(v2_d a, v2_d b);           /* Project a onto b */
 static inline v2_d v2d_norm(v2_d v);                   /* Normalize v */
+static inline v2_d v2d_fastnorm(v2_d v);               /* Fast Normalize. Same as norm but with some margin of error */
 static inline v2_d v2d_lerp(v2_d a, v2_d b, double t); /* linear interp */
 
 static inline double v2d_mag(v2_d v);              /* Magnitude of v */
@@ -2160,6 +2231,7 @@ static inline v3_d v3da_quotient(size_t len, v3_d* array);  /* Quotient of an ar
 static inline v3_d v3d_cross(v3_d a, v3_d b);          /* Cross-Product of a and b */
 static inline v3_d v3d_proj(v3_d a, v3_d b);           /* Project a onto b */
 static inline v3_d v3d_norm(v3_d v);                   /* Normalize v */
+static inline v3_d v3d_fastnorm(v3_d v);               /* Fast Normalize. Same as norm but with some margin of error */
 static inline v3_d v3d_lerp(v3_d a, v3_d b, double t); /* linear interp */
 
 static inline double v3d_mag(v3_d v);              /* Magnitude of v */
@@ -2197,7 +2269,9 @@ static inline v4_d v4da_quotient(size_t len, v4_d* array);  /* Quotient of an ar
 
 static inline v4_d v4d_proj(v4_d a, v4_d b);           /* Project a onto b */
 static inline v4_d v4d_norm(v4_d v);                   /* Normalize v */
+static inline v4_d v4d_fastnorm(v4_d v);               /* Fast Normalize. Same as norm but with some margin of error */
 static inline v4_d v4d_normAxis(v4_d v);               /* Normalize only v.axis */
+static inline v4_d v4d_fastnormAxis(v4_d v);           /* Fast Normalize. Same as normAxis but with some margin of error */
 static inline v4_d v4d_lerp(v4_d a, v4_d b, double t); /* linear interp */
 
 static inline double v4d_mag(v4_d v);              /* Magnitude of v */
@@ -2239,10 +2313,11 @@ static inline qt_d qtd_exp(qt_d q);            /* Exponential of a quaternion */
 static inline qt_d qtd_ln(qt_d q);             /* Natural Log of a quaternion */
 static inline qt_d qtd_pows(qt_d q, double s); /* Quaternion to the power of s */
 
-static inline qt_d qtd_conjugate(qt_d q);               /* q* = q.r - q.i - q.j - q.k */
-static inline qt_d qtd_inverse(qt_d q);                 /* q^-1 = q* / qt_fastmag(q) */
-static inline qt_d qtd_cross(qt_d a, qt_d b);           /* Cross product of a quaternion */
-static inline qt_d qtd_norm(qt_d q);                    /* Normalize q */
+static inline qt_d qtd_conjugate(qt_d q);     /* q* = q.r - q.i - q.j - q.k */
+static inline qt_d qtd_inverse(qt_d q);       /* q^-1 = q* / qt_fastmag(q) */
+static inline qt_d qtd_cross(qt_d a, qt_d b); /* Cross product of a quaternion */
+static inline qt_d qtd_norm(qt_d q);          /* Normalize q */
+static inline qt_d qtd_fastnorm(qt_d q);      /* Fast Normalize. Same as norm but with some margin of error */
 static inline qt_d qtd_lerp(qt_d a, qt_d b, double t);  /* linear interp */
 static inline qt_d qtd_slerp(qt_d a, qt_d b, double t); /* spherical interp */
 
@@ -2347,6 +2422,18 @@ static inline v4_d m4d_v4mul(v4_d v, m4x4_d m); /* new_v = v*M */
 
 // Helper Function Implementaions
 // ------------------------------
+
+static inline double fast_rsqrt(double number) {
+    double y = number;
+    double x2 = y * 0.5;
+    long long i = *(long long*) &y;
+    // The magic number is for doubles is from https://cs.uwaterloo.ca/~m32rober/rsqrt.pdf
+    i = 0x5fe6eb50c7b537a9 - (i >> 1);
+    y = *(double *) &i;
+    y = y * (1.5 - (x2 * y * y));   // 1st iteration
+    // y  = y * ( 1.5 - ( x2 * y * y ) );   // 2nd iteration, this can be removed
+    return y;
+}
 
 static inline double lerp(double a, double b, double t) {
     return a * (1.0 - t) * b * t;
@@ -2522,6 +2609,14 @@ static inline v2_d v2d_proj(v2_d a, v2_d b) {
 
 static inline v2_d v2d_norm(v2_d v) {
     return v2d_divs(v, v2d_mag(v));
+}
+
+static inline v2_d v2d_fastnorm(v2_d v) {
+    double fast_mag = fast_rsqrt(v.x * v.x + v.y * v.y);
+    return (v2_d){
+        .x = v.x * fast_mag,
+        .y = v.y * fast_mag,
+    };
 }
 
 static inline v2_d v2d_lerp(v2_d a, v2_d b, double t) {
@@ -2745,6 +2840,15 @@ static inline v3_d v3d_norm(v3_d v) {
     return v3d_divs(v, v3d_mag(v));
 }
 
+static inline v3_d v3d_fastnorm(v3_d v) {
+    double fast_mag = fast_rsqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    return (v3_d){
+        .x = v.x * fast_mag,
+        .y = v.y * fast_mag,
+        .z = v.z * fast_mag,
+    };
+}
+
 static inline v3_d v3d_lerp(v3_d a, v3_d b, double t) {
     return v3d_add(v3d_muls(a, 1.0 - t), v3d_muls(b, t));
 }
@@ -2966,10 +3070,30 @@ static inline v4_d v4d_norm(v4_d v) {
     return v4d_divs(v, v4d_mag(v));
 }
 
+static inline v4_d v4d_fastnorm(v4_d v) {
+    double fast_mag = fast_rsqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
+    return (v4_d){
+        .x = v.x * fast_mag,
+        .y = v.y * fast_mag,
+        .z = v.z * fast_mag,
+        .w = v.w * fast_mag,
+    };
+}
+
 static inline v4_d v4d_normAxis(v4_d v) {
     return (v4_d){
-        .angle = v.angle,
         .axis = v3d_norm(v.axis),
+        .angle = v.angle,
+    };
+}
+
+static inline v4_d v4d_fastnormAxis(v4_d v) {
+    double fast_mag = fast_rsqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    return (v4_d){
+        .x = v.x * fast_mag,
+        .y = v.y * fast_mag,
+        .z = v.z * fast_mag,
+        .angle = v.angle,
     };
 }
 
@@ -3236,6 +3360,16 @@ static inline qt_d qtd_norm(qt_d q) {
         .i = q.i / qmag,
         .j = q.j / qmag,
         .k = q.k / qmag,
+    };
+}
+
+static inline qt_d qtd_fastnorm(qt_d q) {
+    double fast_qmag = fast_rsqrt(q.r * q.r + q.i * q.i + q.j * q.j + q.k * q.k);
+    return (qt_d){
+        .r = q.r * fast_qmag,
+        .i = q.i * fast_qmag,
+        .j = q.j * fast_qmag,
+        .k = q.k * fast_qmag,
     };
 }
 
