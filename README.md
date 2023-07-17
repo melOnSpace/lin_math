@@ -485,7 +485,7 @@ qt_t qt_add(qt_t a, qt_t b);
 qt_t qt_sub(qt_t a, qt_t b);
 qt_t qt_mul(qt_t a, qt_t b);
 ```
-- Note the lack of Quaternion division. This is deliberate. For quaternion division: $Q = p/q$ is the same as $Q = p^(-1) * q$
+- Note the lack of Quaternion division. This is deliberate. For quaternion division: $Q = p/q$ is the same as $Q = p^{-1} * q$
 
 #### Scalar Operators
 ```c
