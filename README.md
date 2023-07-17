@@ -164,6 +164,7 @@ Standard lerp function. Returns a number that is between `a` and `b`. `t` being 
 
 [Wikipedia Article about linear interpolation](https://en.wikipedia.org/wiki/Linear_interpolation)
 
+</details>
 
 #### ***Casting from Type<sub>A</sub> to Type<sub>B</sub>***
 
@@ -184,9 +185,6 @@ v3_t v4_to_v3(v4_t v);
 v4_t v2_to_v4(v2_t v);
 v4_t v3_to_v4(v3_t v);
 ```
-
-
-</details>
 
 #### ***Printing Types with `printf`***
 ```c
