@@ -134,24 +134,216 @@ OpenGL expects a matrix to be in column-major order. Thus there is no need to tr
 
 # Functions
 
-All functions are prefixed with the type they operate on (with expection to the misc functions). If they operate on doubles then there will be a `d` after the type. For example: `v2_add` for floats and `v2d_add` for doubles. Some functions will also have a `v` or an `a` attached. `m4_translation` and `m4v_translation` are identical functions, only that `m4v` means it takes in a vector. This does get a little ugly. For example `m4dv_translation`, but for now this isn't subject to change.
+All functions are prefixed with the type they operate on (with expection to the misc functions). If they operate on doubles then there will be a `d` after the type. For example: `v2_add` for floats and `v2d_add` for doubles. Some functions will also have a `v` attached. `m4_translation` and `m4v_translation` are identical functions, only that `m4v` means it takes in a vector. This does get a little ugly. For example `m4dv_translation`, but for now this isn't subject to change.
 
-### Misc Functions
+## Misc Functions
+
+#### ***Fast Inverse Square Root***
 
 ```c
-float  lerpf(float a, float b, float t);
-double lerp(double a, double b, double t)
+float  fast_rsqrtf(float number);
+double fast_rsqrt(double number);
 ```
 <details>
-<summary>Linear Interpolation</summary>
+<summary>Description</summary>
 
-Standard lerp function. Returns a number that is between `a` and `b`. `t` being how far from `a` to "walk" to `b`
+[Wikipedia Article on the function](https://en.wikipedia.org/wiki/Fast_inverse_square_root)
 
 </details>
 
-## 2D Vector Functions
+#### ***Linear Interpolation***
 
-### Vector 2D
+```c
+float  lerpf(float a, float b, float t);
+double lerp(double a, double b, double t);
+```
+<details>
+<summary>Description</summary>
 
+Standard lerp function. Returns a number that is between `a` and `b`. `t` being how far from `a` to "walk" to `b`
 
-### Vector Addition
+[Wikipedia Article about linear interpolation](https://en.wikipedia.org/wiki/Linear_interpolation)
+
+</details>
+
+## 32-bit Float Vector Functions
+
+#### ***Vector Builder***
+
+```c
+v2_t vec2(float x, float y);
+v3_t vec3(float x, float y, float z);
+v4_t vec4(float x, float y, float z, float w);
+```
+
+#### ***Vector Initialization***
+
+```c
+v2_t vec2Init(float i);
+v3_t vec3Init(float i);
+v4_t vec4Init(float i);
+```
+<details>
+<summary>Description</summary>
+Returns a vector with all fields initialized to `i`
+
+</details>
+
+#### ***Basic 2D Vector Arithmetic***
+
+#### Pair-Wise Operators
+```c
+v2_t v2_add(v2_t a, v2_t b); /* Addition */
+v3_t v3_add(v3_t a, v3_t b);
+v4_t v4_add(v4_t a, v4_t b);
+
+v2_t v2_sub(v2_t a, v2_t b); /* Subtraction */
+v3_t v3_sub(v3_t a, v3_t b);
+v4_t v4_sub(v4_t a, v4_t b);
+
+v2_t v2_mul(v2_t a, v2_t b); /* Multiplication */
+v3_t v3_mul(v3_t a, v3_t b);
+v4_t v4_mul(v4_t a, v4_t b);
+
+v2_t v2_div(v2_t a, v2_t b); /* Division */
+v3_t v3_div(v3_t a, v3_t b);
+v4_t v4_div(v4_t a, v4_t b);
+```
+
+#### Scalar Operators
+```c
+v2_t v2_adds(v2_t v, float s); /* Addition */
+v3_t v3_adds(v3_t v, float s);
+v4_t v4_adds(v4_t v, float s);
+
+v2_t v2_subs(v2_t v, float s); /* Subtraction */
+v3_t v3_adds(v3_t v, float s);
+v4_t v4_adds(v4_t v, float s);
+
+v2_t v2_muls(v2_t v, float s); /* Multiplication */
+v3_t v3_adds(v3_t v, float s);
+v4_t v4_adds(v4_t v, float s);
+
+v2_t v2_divs(v2_t v, float s); /* Division */
+v3_t v3_adds(v3_t v, float s);
+v4_t v4_adds(v4_t v, float s);
+```
+#### Variatic Functions
+```c
+v2_t v2_sum(int num, ...); /* Addition */
+v3_t v3_sum(int num, ...);
+v4_t v4_sum(int num, ...);
+
+v2_t v2_difference(int num, ...); /* Subtraction */
+v3_t v3_difference(int num, ...);
+v4_t v4_difference(int num, ...);
+
+v2_t v2_product(int num, ...); /* Multiplication */
+v3_t v3_product(int num, ...);
+v4_t v4_product(int num, ...);
+
+v2_t v2_quotient(int num, ...); /* Division */
+v3_t v3_quotient(int num, ...);
+v4_t v4_quotient(int num, ...);
+```
+- `num` must be the amount of vectors passed
+#### Array Functions
+```c
+v2_t v2_sum_array(size_t len, v2_t* array); /* Addition */
+v3_t v3_sum_array(size_t len, v3_t* array);
+v4_t v4_sum_array(size_t len, v4_t* array);
+
+v2_t v2_difference_array(size_t len, v2_t* array); /* Addition */
+v3_t v3_difference_array(size_t len, v3_t* array);
+v4_t v4_difference_array(size_t len, v4_t* array);
+
+v2_t v2_product_array(size_t len, v2_t* array); /* Addition */
+v3_t v3_product_array(size_t len, v3_t* array);
+v4_t v4_product_array(size_t len, v4_t* array);
+
+v2_t v2_quotient_array(size_t len, v2_t* array); /* Addition */
+v3_t v3_quotient_array(size_t len, v3_t* array);
+v4_t v4_quotient_array(size_t len, v4_t* array);
+```
+- These functions are implemented via loops that iterate over `array`. Be careful to pass the correct `len`, *especially* if `array` is allocated on the stack!
+#### ***Other 2D Vector Arithmetic***
+
+#### Projection
+```c
+v2_t v2_project(v2_t a, v2_t b);
+v3_t v3_project(v3_t a, v3_t b);
+v4_t v4_project(v4_t a, v4_t b);
+```
+<details>
+<summary>Description</summary>
+Projects vector `a` onto `b`. A common explanation is to think of vector `a` casting a shadow onto `b`.
+
+[Better Explanation that what I just gave (i.e., Wikipedia)](https://en.wikipedia.org/wiki/Vector_projection)
+
+</details>
+
+#### Normalization
+```c
+v2_t v2_norm(v2_t v); v2_t v2_fastnorm(v2_t v);
+v3_t v3_norm(v3_t v); v3_t v3_fastnorm(v3_t v);
+v4_t v4_norm(v4_t v); v4_t v4_fastnorm(v4_t v);
+
+v4_t v4_normAxis(v4_t v); v4_t v4_fastnormAxis(v4_t v);
+```
+<details>
+<summary>Description</summary>
+A normalize function returns a vector pointing in the same direction but with a length always of 1
+The difference between `norm` and `fastnorm` is the square-root operator they both use. The norm fucntion uses `math.h sqrtf()`; fast_norm uses the `fast_rsqrtf()` function.
+
+[Fast Inverse Square Root](https://en.wikipedia.org/wiki/Fast_inverse_square_root)
+
+The `v4_nromAxis` functions exist for Axis-Angle rotations, which require a normalized to function. `v4_normAxis` will treat `v` as an Axis-Angle and only normalize the `v.axis` part of the vector, leaving `v.angle` alone.
+
+</details>
+
+#### ***Linear Interpolation of Vectors***
+```c
+v2_t v2_lerp(v2_t a, v2_t b, float t);
+v3_t v3_lerp(v3_t a, v3_t b, float t);
+v4_t v4_lerp(v4_t a, v4_t b, float t);
+```
+<details>
+<summary>Description</summary>
+Standard lerp function. Returns a number that is between `a` and `b`. `t` being how far from `a` to "walk" to `b`
+
+[Wikipedia Article about linear interpolation](https://en.wikipedia.org/wiki/Linear_interpolation)
+
+</details>
+
+#### Cross Product
+```c
+v3_t v3_cross(v3_t a, v3_t b);
+```
+<details>
+<summary>Description</summary>
+Note that there is only a 3D vector cross product. That is because the cross product does not exist for 2D or 4D vectors. If the cross product of two axis angles are wanted, one can do this: `v3_t new_angle = v3_cross(axis_a.axis, axis_b.axis);`
+
+[Wikipedia Article about cross product](https://en.wikipedia.org/wiki/Cross_product)
+
+</details>
+
+#### Vector Magnitude (i.e., Length of Vectors)
+```c
+v2_t v2_mag(v2_t v);           v2_t v2_fastmag(v2_t v);
+v3_t v3_mag(v3_t v);           v3_t v3_fastmag(v3_t v);
+v4_t v4_mag(v4_t v);           v4_t v4_fastmag(v4_t v);
+
+v2_t v2_dist(v2_t a, v2_t b);  v2_t v2_fastdist(v2_t a, v2_t b);
+v3_t v3_dist(v3_t a, v3_t b);  v3_t v3_fastdist(v3_t a, v3_t b);
+v4_t v4_dist(v4_t a, v4_t b);  v4_t v4_fastdist(v4_t a, v4_t b);
+```
+<details>
+<summary>Description</summary>
+There are two types of functions for getting the magnitude of a vector; both of which have fast variants. 
+
+|**Function**|**Description**             |**Fast Variant**                      |
+|:---------- |:-------------------------- |:------------------------------------ |
+|`mag`       | The length of vector `v`   | The length<sup>2</sup> of vector `v` |
+|`dist`      | Short-hand for `mag(a - b)`| Short-hand for `fastmag(a - b)`      |
+
+</details>
