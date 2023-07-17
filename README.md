@@ -375,7 +375,7 @@ v4_t v4_angle(v4_t a, v4_t b);
 <details>
 <summary>Description</summary>
 
-Returns the angle between vectors `a` and `b`. For example: the angle between `{ 1.0, 0.0 }` and `{ 0.0, 1.0 }` is $`π / 2$`
+Returns the angle between vectors `a` and `b`. For example: the angle between `{ 1.0, 0.0 }` and `{ 0.0, 1.0 }` is $π / 2$
 
 Like all functions in this library, angles are expressed in radians
 
