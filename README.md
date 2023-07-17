@@ -580,6 +580,8 @@ qt_t qt_conjugate(qt_t q);
 <details>
 <summary>Description</summary>
 
-Does the following: $q = a + bi + cj + dk$ -> $conjugate(q) = a - bi - cj - dk$
+Does the following: 
+$$q = a + bi + cj + dk$$
+$$conjugate(q) = a - bi - cj - dk$$
 
 </details>
