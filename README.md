@@ -546,6 +546,7 @@ Returns $ln(q)$. If other log bases are wanted then one could do this:
 $$p = \log_b(q)$$
 $$p = \frac{ln(q)}{ln(b)}$$
 $$p = (ln(q))^{-1} * ln(b)$$
+Where q, b, and p are all quaternions
 
 ```c
 // Log base 10 + 0i + 0j + 0k
@@ -561,4 +562,4 @@ qt_t result = qt_mul(qt_inverse(qt_ln(a)), qt_ln(b));
 #### Quaternion Raised to a Real Number
 ```c
 qt_t qt_pows(qt_t q, float s);
-```
+`````
