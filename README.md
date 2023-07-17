@@ -564,3 +564,22 @@ qt_t qt_log(qt_t q, qt_t base) {
 ```c
 qt_t qt_pows(qt_t q, float s);
 ```
+<details>
+<summary>Description</summary>
+
+[My source for the function](https://math.stackexchange.com/questions/939229/unit-quaternion-to-a-scalar-power)
+
+</details>
+
+#### ****More Quaternion Arithmetic****
+
+#### Quaternion Conjugate
+```c
+qt_t qt_conjugate(qt_t q);
+```
+<details>
+<summary>Description</summary>
+
+Does the following: $q = a + bi + cj + dk$ -> $conjugate(q) = a - bi - cj - dk$
+
+</details>
