@@ -164,6 +164,62 @@ Standard lerp function. Returns a number that is between `a` and `b`. `t` being 
 
 [Wikipedia Article about linear interpolation](https://en.wikipedia.org/wiki/Linear_interpolation)
 
+
+#### ***Casting from Type<sub>A</sub> to Type<sub>B</sub>***
+
+#### Cast to 2D Vector
+```c
+v2_t v3_to_v2(v3_t v);
+v2_t v4_to_v2(v4_t v);
+```
+
+#### Cast to 3D Vector
+```c
+v3_t v2_to_v3(v2_t v);
+v3_t v4_to_v3(v4_t v);
+```
+
+#### Cast to 4D Vector
+```c
+v4_t v2_to_v4(v2_t v);
+v4_t v3_to_v4(v3_t v);
+```
+
+
+</details>
+
+#### ***Printing Types with `printf`***
+```c
+#define v2_print(v) (printf("[%f, %f]", (v).x, (v).y))
+#define v3_print(v) (printf("[%f, %f, %f]", (v).x, (v).y, (v).z))
+#define v4_print(v) (printf("[%f, %f, %f, %f]", (v).x, (v).y, (v).z, (v).w))
+
+#define v2_println(v) (printf("[%f, %f]\n", (v).x, (v).y))
+#define v3_println(v) (printf("[%f, %f, %f]\n", (v).x, (v).y, (v).z))
+#define v4_println(v) (printf("[%f, %f, %f, %f]\n", (v).x, (v).y, (v).z, (v).w))
+
+#define qt_print(q)   (printf("[%f, %fi, %fj, %fk]",   (q).r, (q).i, (q).j, (q).k))
+#define qt_println(q) (printf("[%f, %fi, %fj, %fk\n]", (q).r, (q).i, (q).j, (q).k))
+
+#define MATRIX_PRINT_STR "\
+.x0=%f .x1=%f .x2=%f .x3=%f\n\
+.y0=%f .y1=%f .y2=%f .y3=%f\n\
+.z0=%f .z1=%f .z2=%f .z3=%f\n\
+.w0=%f .w1=%f .w2=%f .w3=%f\n"
+
+// Prints a matrix. Works with both m4x4_t & m4x4_d
+#define m4_println(m) (printf(MATRIX_PRINT_STR, \
+            (m).x0, (m).x1, (m).x2, (m).x3,\
+            (m).y0, (m).y1, (m).y2, (m).y3,\
+            (m).z0, (m).z1, (m).z2, (m).z3,\
+            (m).w0, (m).w1, (m).w2, (m).w3))
+
+```
+<details>
+<summary>Description</summary>
+
+Macros! Because these are macros they can take in either `float` or `double` types. One day I will write a wrapper for `printf` for better functionality, but until then this will do.
+
 </details>
 
 ## 32-bit Float Vector Functions
@@ -303,7 +359,7 @@ The `v4_nromAxis` functions exist for Axis-Angle rotations, which require a norm
 
 </details>
 
-#### ***Linear Interpolation of Vectors***
+#### Linear Interpolation of Vectors
 ```c
 v2_t v2_lerp(v2_t a, v2_t b, float t);
 v3_t v3_lerp(v3_t a, v3_t b, float t);
@@ -346,13 +402,13 @@ float v4_dot(v4_t a, v4_t b);
 
 #### Vector Magnitude (i.e., Length of Vectors)
 ```c
-v2_t v2_mag(v2_t v);           v2_t v2_fastmag(v2_t v);
-v3_t v3_mag(v3_t v);           v3_t v3_fastmag(v3_t v);
-v4_t v4_mag(v4_t v);           v4_t v4_fastmag(v4_t v);
+float v2_mag(v2_t v);           float v2_fastmag(v2_t v);
+float v3_mag(v3_t v);           float v3_fastmag(v3_t v);
+float v4_mag(v4_t v);           float v4_fastmag(v4_t v);
 
-v2_t v2_dist(v2_t a, v2_t b);  v2_t v2_fastdist(v2_t a, v2_t b);
-v3_t v3_dist(v3_t a, v3_t b);  v3_t v3_fastdist(v3_t a, v3_t b);
-v4_t v4_dist(v4_t a, v4_t b);  v4_t v4_fastdist(v4_t a, v4_t b);
+float v2_dist(v2_t a, v2_t b);  float v2_fastdist(v2_t a, v2_t b);
+float v3_dist(v3_t a, v3_t b);  float v3_fastdist(v3_t a, v3_t b);
+float v4_dist(v4_t a, v4_t b);  float v4_fastdist(v4_t a, v4_t b);
 ```
 <details>
 <summary>Description</summary>
@@ -378,5 +434,38 @@ v4_t v4_angle(v4_t a, v4_t b);
 Returns the angle between vectors `a` and `b`. For example: the angle between `{ 1.0, 0.0 }` and `{ 0.0, 1.0 }` is $π / 2$
 
 Like all functions in this library, angles are expressed in radians
+
+</details>
+
+#### Check if the Magnitude of a Vector is Zero
+```c
+int v2_isZero(v2_t v);
+int v3_isZero(v3_t v);
+int v4_isZero(v4_t v);
+```
+<details>
+<summary>Description</summary>
+
+Calculated the magnitude of `v` and returns `0` if it is zero.
+The function does not actually compare `mag(v)` with zero. `isZero` does the following `return fastmag(v) < LIN_EPSILON_F`
+
+Floating point numbers are weird, so it is often easier to compare to a number called epsilon instead of zero. Especially because floating point numbers can be negative zero.
+
+</details>
+
+## 32-bit Quaternion Functions
+
+#### ***Quaternion Builder***
+```c
+qt_t quat(float r, float i, float j, float k);
+qt_t quatv(v4_t v);
+qt_t quatInit(float i);
+```
+<details>
+<summary>Description</summary>
+
+`quat` returns a quaternion from `r`, `i`, `j`, `k`.
+`quatv` converts a 4D vector to a quaternion.
+`quatInit` returns a quaternion with all fields set to `i`.
 
 </details>
