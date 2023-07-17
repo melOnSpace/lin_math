@@ -485,7 +485,7 @@ qt_t qt_add(qt_t a, qt_t b);
 qt_t qt_sub(qt_t a, qt_t b);
 qt_t qt_mul(qt_t a, qt_t b);
 ```
-- Note the lack of Quaternion division. This is deliberate. For quaternion division: $Q = p/q$ is the same as $Q = p^(-1) * q$
+- Note the lack of Quaternion division. This is deliberate. For quaternion division: $Q = p/q$ is the same as $Q = p^{-1} * q$
 
 #### Scalar Operators
 ```c
@@ -541,7 +541,12 @@ qt_t qt_ln(qt_t q);
 <details>
 <summary>Description</summary>
 
-Returns $ln(q)$. If other log bases are wanted then one could do this: $p = \log_b(q)$ -> $p = \frac{ln(q)}{ln(b)}$
+Returns $ln(q)$. If other log bases are wanted then one could do this: 
+$$
+p = \log_b(q)
+p = \frac{ln(q)}{ln(b)}
+p = (ln(q))^{-1} * ln(b)
+$$
 ```c
 // Log base 10 + 0i + 0j + 0k
 qt_t a;
