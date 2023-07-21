@@ -290,9 +290,8 @@ static inline int v4_isZero(v4_t v);             /* Checks if v is zero */
 // decorations
 // ---------------------------------------
 
-static inline qt_t qt(float r, float i, float j, float k); /* Returns a quaternion */
-static inline qt_t qtv(v4_t v); /* Returns a quaternion */
-static inline qt_t qtInit(float i); /* Returns quaternion initalized to i */
+static inline qt_t quat(float r, float i, float j, float k); /* Returns a quaternion */
+static inline qt_t quatInit(float i); /* Returns quaternion initalized to i */
 
 static inline qt_t qt_identity(void); /* Returns 1 + 0i + 0j + 0k */
 static inline qt_t qt_axis(float x, float y, float z, float angle); /* Axis-Angle to quaternion */
@@ -347,12 +346,19 @@ static inline int qt_isIdentity(qt_t q);        /* Checks if q == 1 + 0i + 0j + 
 
 static inline v2_t v3_to_v2(v3_t v);
 static inline v2_t v4_to_v2(v4_t v);
+static inline v2_t qt_to_v2(qt_t q);
 
 static inline v3_t v2_to_v3(v2_t v);
 static inline v3_t v4_to_v3(v4_t v);
+static inline v3_t qt_to_v3(qt_t q);
 
 static inline v4_t v2_to_v4(v2_t v);
 static inline v4_t v3_to_v4(v3_t v);
+static inline v4_t qt_to_v4(qt_t v);
+
+static inline qt_t v2_to_qt(v2_t v);
+static inline qt_t v3_to_qt(v3_t v);
+static inline qt_t v4_to_qt(v4_t v);
 
 // Various Matrix Functions!
 // -------------------------
@@ -374,6 +380,7 @@ static inline m4x4_t m4v_scaling(v3_t scale);                   /* Returns scali
 static inline m4x4_t m4_xrot(float x); /* Returns rotation matrix for x-axis */
 static inline m4x4_t m4_yrot(float y); /* Returns rotation matrix for y-axis */
 static inline m4x4_t m4_zrot(float z); /* Returns rotation matrix for z-axis */
+static inline m4x4_t m4_lookat(v3_t from, v3_t to, v3_t up);
 static inline m4x4_t m4_perspective(
         float fovy, float aratio,
         float near_plane, float far_plane); /* Returns perspective matrix */
@@ -1130,7 +1137,7 @@ static inline v4_t v4_fastnormAxis(v4_t v) {
         .x = v.x * fast_mag,
         .y = v.y * fast_mag,
         .z = v.z * fast_mag,
-        .angle = v.angle,
+        .w = v.angle,
     };
 }
 
@@ -1171,11 +1178,11 @@ static inline int v4_isZero(v4_t v) {
 // Quaternion Implementaions
 // -------------------------
 
-static inline qt_t qt(float r, float i, float j, float k) {
+static inline qt_t quat(float r, float i, float j, float k) {
     return (qt_t){ .r = r, .i = i, .j = j, .k = k };
 }
 
-static inline qt_t qtInit(float i) {
+static inline qt_t quatInit(float i) {
     return (qt_t){ .r = i, .i = i, .j = i, .k = i };
 }
 
@@ -1460,6 +1467,10 @@ static inline v2_t v4_to_v2(v4_t v) {
     return v.v2;
 }
 
+static inline v2_t qt_to_v2(qt_t q) {
+    return q.v4.v2;
+}
+
 
 static inline v3_t v2_to_v3(v2_t v) {
     return (v3_t){ .x=v.x, .y=v.y, .z=0.0f };
@@ -1469,6 +1480,10 @@ static inline v3_t v4_to_v3(v4_t v) {
     return v.v3;
 }
 
+static inline v3_t qt_to_v3(qt_t q) {
+    return q.v4.v3;
+}
+
 
 static inline v4_t v2_to_v4(v2_t v) {
     return (v4_t){ .x=v.x, .y=v.y, .z=0.0f, .w=0.0f };
@@ -1476,6 +1491,23 @@ static inline v4_t v2_to_v4(v2_t v) {
 
 static inline v4_t v3_to_v4(v3_t v) {
     return (v4_t){ .x=v.x, .y=v.y, .z=v.z, .w=0.0f };
+}
+
+static inline v4_t qt_to_v4(qt_t q) {
+    return *(v4_t*)&q;
+}
+
+
+static inline qt_t v2_to_qt(v2_t v) {
+    return (qt_t){ .r=v.x, .i=v.y, .j=0.0f, .k=0.0f };
+}
+
+static inline qt_t v3_to_qt(v3_t v) {
+    return (qt_t){ .r=v.x, .i=v.y, .j=v.z, .k=0.0f };
+}
+
+static inline qt_t v4_to_qt(v4_t v) {
+    return *(qt_t*)&v;
 }
 
 
@@ -1591,6 +1623,18 @@ static inline m4x4_t m4_zrot(float z) {
     };
 }
 
+static inline m4x4_t m4_lookat(v3_t from, v3_t to, v3_t up) {
+    v3_t z = v3_muls(v3_norm(v3_sub(to, from)), -1.0f);
+    v3_t x = v3_norm(v3_cross(up, z));
+    v3_t y = v3_cross(z, x);
+
+    return (m4x4_t){
+        .x0=x.x,  .x1=y.x,  .x2=z.x,  .x3=-v3_dot(from, x),
+        .y0=x.y,  .y1=y.y,  .y2=z.y,  .y3=-v3_dot(from, y),
+        .z0=x.z,  .z1=y.z,  .z2=z.z,  .z3=-v3_dot(from, z),
+        .w0=0.0f, .w1=0.0f, .w2=0.0f, .w3=1.0f,
+    };
+}
 
 static inline m4x4_t m4_perspective(float fovy, float aratio, float near_plane, float far_plane) {
     float f = 1.0f / tanf(fovy / 2.0f);
@@ -2286,8 +2330,8 @@ static inline int v4d_isZero(v4_d v);              /* Checks if v is zero */
 // decorations
 // ---------------------------------------
 
-static inline qt_d qtd(double r, double i, double j, double k); /* Returns a quaternion */
-static inline qt_d qtdInit(double i); /* Returns quaternion initalized to i */
+static inline qt_d quatd(double r, double i, double j, double k); /* Returns a quaternion */
+static inline qt_d quatdInit(double i); /* Returns quaternion initalized to i */
 
 static inline qt_d qtd_identity(void); /* Returns 1 + 0i + 0j + 0k */
 static inline qt_d qtd_axis(double x, double y, double z, double angle); /* Axis-Angle to quaternion */
@@ -2337,12 +2381,19 @@ static inline int qtd_isIdentity(qt_d q);         /* Checks if q == 1 + 0i + 0j 
 
 static inline v2_d v3d_to_v2d(v3_d v);
 static inline v2_d v4d_to_v2d(v4_d v);
+static inline v2_d qtd_to_v2d(qt_d q);
 
 static inline v3_d v2d_to_v3d(v2_d v);
 static inline v3_d v4d_to_v3d(v4_d v);
+static inline v3_d qtd_to_v3d(qt_d q);
 
 static inline v4_d v2d_to_v4d(v2_d v);
 static inline v4_d v3d_to_v4d(v3_d v);
+static inline v4_d qtd_to_v4d(qt_d q);
+
+static inline qt_d v2d_to_qtd(v2_d v);
+static inline qt_d v3d_to_qtd(v3_d v);
+static inline qt_d v4d_to_qtd(v4_d v);
 
 // Various Matrix Functions! Order time! Init functions, then
 // common matrices, OpenGL camera matrices, a short cut for a
@@ -2367,6 +2418,7 @@ static inline m4x4_d m4dv_scaling(v3_d scale);                      /* Returns s
 static inline m4x4_d m4d_xrot(double x); /* Returns rotation matrix for x-axis */
 static inline m4x4_d m4d_yrot(double y); /* Returns rotation matrix for y-axis */
 static inline m4x4_d m4d_zrot(double z); /* Returns rotation matrix for z-axis */
+static inline m4x4_d m4d_lookat(v3_d from, v3_d to, v3_d up);
 static inline m4x4_d m4d_perspective(
         double fovy, double aratio,
         double near_plane, double far_plane); /* Returns perspective matrix */
@@ -3093,7 +3145,7 @@ static inline v4_d v4d_fastnormAxis(v4_d v) {
         .x = v.x * fast_mag,
         .y = v.y * fast_mag,
         .z = v.z * fast_mag,
-        .angle = v.angle,
+        .w = v.angle,
     };
 }
 
@@ -3134,11 +3186,11 @@ static inline int v4d_isZero(v4_d v) {
 // Quaternion Implementaions
 // -------------------------
 
-static inline qt_d qtd(double r, double i, double j, double k) {
+static inline qt_d quatd(double r, double i, double j, double k) {
     return (qt_d){ .r = r, .i = i, .j = j, .k = k };
 }
 
-static inline qt_d qtdInit(double i) {
+static inline qt_d quatdInit(double i) {
     return (qt_d){ .r = i, .i = i, .j = i, .k = i };
 }
 
@@ -3422,6 +3474,10 @@ static inline v2_d v4d_to_v2d(v4_d v) {
     return v.v2;
 }
 
+static inline v2_d qtd_to_v2d(qt_d q) {
+    return q.v4.v2;
+}
+
 
 static inline v3_d v2d_to_v3d(v2_d v) {
     return (v3_d){ .x=v.x, .y=v.y, .z=0.0 };
@@ -3431,6 +3487,10 @@ static inline v3_d v4d_to_v3d(v4_d v) {
     return v.v3;
 }
 
+static inline v3_d qtd_to_v3d(qt_d q) {
+    return q.v4.v3;
+}
+
 
 static inline v4_d v2d_to_v4d(v2_d v) {
     return (v4_d){ .x=v.x, .y=v.y, .z=0.0, .w=0.0 };
@@ -3438,6 +3498,23 @@ static inline v4_d v2d_to_v4d(v2_d v) {
 
 static inline v4_d v3d_to_v4d(v3_d v) {
     return (v4_d){ .x=v.x, .y=v.y, .z=v.z, .w=0.0 };
+}
+
+static inline v4_d qtd_to_v4d(qt_d q) {
+    return *(v4_d*)&q;
+}
+
+
+static inline qt_d v2d_to_qtd(v2_d v) {
+    return (qt_d){ .r=v.x, .i=v.y, .j=0.0, .k=0.0 };
+}
+
+static inline qt_d v3d_to_qtd(v3_d v) {
+    return (qt_d){ .r=v.x, .i=v.y, .j=v.z, .k=0.0 };
+}
+
+static inline qt_d v4d_to_qtd(v4_d v) {
+    return *(qt_d*)&v;
 }
 
 
@@ -3550,6 +3627,19 @@ static inline m4x4_d m4d_zrot(double z) {
         .y0=snz, .y1= csz, .y2=0.0, .y3=0.0,
         .z0=0.0, .z1= 0.0, .z2=1.0, .z3=0.0,
         .w0=0.0, .w1= 0.0, .w2=0.0, .w3=1.0,
+    };
+}
+
+static inline m4x4_d m4d_lookat(v3_d from, v3_d to, v3_d up) {
+    v3_d z = v3d_muls(v3d_norm(v3d_sub(to, from)), -1.0);
+    v3_d x = v3d_norm(v3d_cross(up, z));
+    v3_d y = v3d_cross(z, x);
+
+    return (m4x4_d){
+        .x0=x.x, .x1=y.x, .x2=z.x, .x3=-v3d_dot(from, x),
+        .y0=x.y, .y1=y.y, .y2=z.y, .y3=-v3d_dot(from, y),
+        .z0=x.z, .z1=y.z, .z2=z.z, .z3=-v3d_dot(from, z),
+        .w0=0.0, .w1=0.0, .w2=0.0, .w3=1.0,
     };
 }
 
