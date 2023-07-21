@@ -465,17 +465,21 @@ static inline v4_t m4_v4mul(v4_t v, m4x4_t m); /* new_v = v*M */
 // ----------------------------
 
 static inline float fast_rsqrtf(float number) {
+    union no_ptr_magic { //   :(
+        long  i32;
+        float f32;
+    };
+
     long i;
     float x2, y;
-    const float threehalfs = 1.5f;
 
     x2 = number * 0.5;
     y = number;
-    i = *(long*)&y;
+    i = (union no_ptr_magic){ .f32=y }.i32;
     i = 0x5f3759df - (i >> i);
-    y = *(float*)&i;
-    y = y * (threehalfs - (x2 * y * y));
-    // y = y * (threehalfs - (x2 * y * y)); // enable if need more accuracy
+    y = (union no_ptr_magic){ .i32=i }.f32;
+    y = y * (1.5f - (x2 * y * y));
+    // y = y * (1.5f - (x2 * y * y)); // enable if need more accuracy
 
     return y;
 }
@@ -1494,7 +1498,7 @@ static inline v4_t v3_to_v4(v3_t v) {
 }
 
 static inline v4_t qt_to_v4(qt_t q) {
-    return *(v4_t*)&q;
+    return q.v4;
 }
 
 
@@ -1507,7 +1511,12 @@ static inline qt_t v3_to_qt(v3_t v) {
 }
 
 static inline qt_t v4_to_qt(v4_t v) {
-    return *(qt_t*)&v;
+    union no_ptr_magic { // because *(qt_t*)&v; is illegal :(
+        qt_t qt;
+        v4_t v4;
+    };
+
+    return (union no_ptr_magic){ .v4=v }.qt;
 }
 
 
@@ -2476,12 +2485,17 @@ static inline v4_d m4d_v4mul(v4_d v, m4x4_d m); /* new_v = v*M */
 // ------------------------------
 
 static inline double fast_rsqrt(double number) {
+    union no_ptr_magic { //   :(
+        long long i64;
+        double    f64;
+    };
+
     double y = number;
     double x2 = y * 0.5;
-    long long i = *(long long*) &y;
+    long long i = (union no_ptr_magic){ .f64=y }.i64;
     // The magic number is for doubles is from https://cs.uwaterloo.ca/~m32rober/rsqrt.pdf
     i = 0x5fe6eb50c7b537a9 - (i >> 1);
-    y = *(double *) &i;
+    y = (union no_ptr_magic){ .i64=i }.f64;
     y = y * (1.5 - (x2 * y * y));   // 1st iteration
     // y  = y * ( 1.5 - ( x2 * y * y ) );   // 2nd iteration, this can be removed
     return y;
@@ -3501,7 +3515,7 @@ static inline v4_d v3d_to_v4d(v3_d v) {
 }
 
 static inline v4_d qtd_to_v4d(qt_d q) {
-    return *(v4_d*)&q;
+    return q.v4;
 }
 
 
@@ -3514,7 +3528,12 @@ static inline qt_d v3d_to_qtd(v3_d v) {
 }
 
 static inline qt_d v4d_to_qtd(v4_d v) {
-    return *(qt_d*)&v;
+    union no_ptr_magic { // because *(qt_d*)&v; is illegal :(
+        qt_d qt;
+        v4_d v4;
+    };
+
+    return (union no_ptr_magic){ .v4=v }.qt;
 }
 
 
