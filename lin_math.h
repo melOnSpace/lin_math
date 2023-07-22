@@ -201,8 +201,8 @@ static inline int v2_isZero(v2_t v);             /* Checks if v is zero */
 // decorations
 // ---------------------------------------
 
-static inline v3_t v3(float x, float y, float z); /* Returns a 3D Vector */
-static inline v3_t v3Init(float i); /* Returns vector initalized to i  */
+static inline v3_t vec3(float x, float y, float z); /* Returns a 3D Vector */
+static inline v3_t vec3Init(float i); /* Returns vector initalized to i  */
 
 static inline v3_t v3_add(v3_t a, v3_t b);   /* Pair-wise addition */
 static inline v3_t v3_adds(v3_t v, float s); /* Adds s to all fields */
@@ -245,8 +245,8 @@ static inline int v3_isZero(v3_t v);             /* Checks if v is zero */
 // decorations
 // ---------------------------------------
 
-static inline v4_t v4(float x, float y, float z, float w); /* Returns a 4D Vector */
-static inline v4_t v4Init(float i); /* Returns vector initalized to i */
+static inline v4_t vec4(float x, float y, float z, float w); /* Returns a 4D Vector */
+static inline v4_t vec4Init(float i); /* Returns vector initalized to i */
 
 static inline v4_t v4_add(v4_t a, v4_t b);   /* Pair-wise addition */
 static inline v4_t v4_adds(v4_t v, float s); /* Adds s to all fields */
@@ -364,12 +364,12 @@ static inline qt_t v4_to_qt(v4_t v);
 // -------------------------
 
 static inline m4x4_t m4v(v4_t c0, v4_t c1, v4_t c2, v4_t c3); /* Returns a 4x4 Matrix */
-static inline m4x4_t m4(
+static inline m4x4_t mat4(
         float x0, float x1, float x2, float x3,
         float y0, float y1, float y2, float y3,
         float z0, float z1, float z2, float z3,
         float w0, float w1, float w2, float w3); /* Returns a 4x4 Matrix */
-static inline m4x4_t m4Init(float i); /* Returns a 4x4 Matrix initalized to i */
+static inline m4x4_t mat4Init(float i); /* Returns a 4x4 Matrix initalized to i */
 
 static inline m4x4_t m4_identity(void);                         /* Returns identity matrix */
 static inline m4x4_t m4_translation(float x, float y, float z); /* Returns translation matrix */
@@ -704,11 +704,11 @@ static inline int v2_isZero(v2_t v) {
 // 3D Vectors Implementaions
 // -------------------------
 
-static inline v3_t v3(float x, float y, float z) {
+static inline v3_t vec3(float x, float y, float z) {
     return (v3_t){ .x=x, .y=y, .z=z };
 }
 
-static inline v3_t v3Init(float i) {
+static inline v3_t vec3Init(float i) {
     return (v3_t){ .x=i, .y=i, .z=i };
 }
 
@@ -934,11 +934,11 @@ static inline int v3_isZero(v3_t v) {
 // 4D Vectors Implementaions
 // -------------------------
 
-static inline v4_t v4(float x, float y, float z, float w) {
+static inline v4_t vec4(float x, float y, float z, float w) {
     return (v4_t){ .x=x, .y=y, .z=z, .w=w };
 }
 
-static inline v4_t v4Init(float i) {
+static inline v4_t vec4Init(float i) {
     return (v4_t){ .x=i, .y=i, .z=i, .w=i };
 }
 
@@ -1524,11 +1524,11 @@ static inline qt_t v4_to_qt(v4_t v) {
 // ------------------------------
 
 
-static inline m4x4_t m4v(v4_t c0, v4_t c1, v4_t c2, v4_t c3) {
+static inline m4x4_t mat4v(v4_t c0, v4_t c1, v4_t c2, v4_t c3) {
     return (m4x4_t){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
 }
 
-static inline m4x4_t m4(
+static inline m4x4_t mat4(
         float x0, float x1, float x2, float x3,
         float y0, float y1, float y2, float y3,
         float z0, float z1, float z2, float z3,
@@ -1541,7 +1541,7 @@ static inline m4x4_t m4(
     };
 }
 
-static inline m4x4_t m4Init(float i) {
+static inline m4x4_t mat4Init(float i) {
     return (m4x4_t){
         .x0=i, .y0=i, .z0=i, .w0=i,
         .x1=i, .y1=i, .z1=i, .w1=i,
@@ -2260,7 +2260,7 @@ static inline int v2d_isZero(v2_d v);              /* Checks if v is zero */
 // decorations
 // ---------------------------------------
 
-static inline v3_d v3d(double x, double y, double z); /* Returns a 3D Vector */
+static inline v3_d vec3d(double x, double y, double z); /* Returns a 3D Vector */
 static inline v3_d v3dInit(double i); /* Returns vector initalized to i  */
 
 static inline v3_d v3d_add(v3_d a, v3_d b);    /* Pair-wise addition */
@@ -2299,8 +2299,8 @@ static inline int v3d_isZero(v3_d v);              /* Checks if v is zero */
 // decorations
 // ---------------------------------------
 
-static inline v4_d v4d(double x, double y, double z, double w); /* Returns a 4D Vector */
-static inline v4_d v4dInit(double i); /* Returns vector initalized to i */
+static inline v4_d vec4d(double x, double y, double z, double w); /* Returns a 4D Vector */
+static inline v4_d vec4dInit(double i); /* Returns vector initalized to i */
 
 static inline v4_d v4d_add(v4_d a, v4_d b);    /* Pair-wise addition */
 static inline v4_d v4d_adds(v4_d v, double s); /* Adds s to all fields */
@@ -2410,13 +2410,13 @@ static inline qt_d v4d_to_qtd(v4_d v);
 // vector-matrix multiplication, and printing.
 // -----------------------------------------------------------
 
-static inline m4x4_d m4dv(v4_d c0, v4_d c1, v4_d c2, v4_d c3); /* Returns a 4x4 Matrix */
-static inline m4x4_d m4d(
+static inline m4x4_d mat4dv(v4_d c0, v4_d c1, v4_d c2, v4_d c3); /* Returns a 4x4 Matrix */
+static inline m4x4_d mat4d(
         double x0, double x1, double x2, double x3,
         double y0, double y1, double y2, double y3,
         double z0, double z1, double z2, double z3,
         double w0, double w1, double w2, double w3); /* Returns a 4x4 Matrix */
-static inline m4x4_d m4dInit(double i); /* Returns a 4x4 Matrix initalized to i */
+static inline m4x4_d mat4dInit(double i); /* Returns a 4x4 Matrix initalized to i */
 
 static inline m4x4_d m4d_identity(void);                            /* Returns identity matrix */
 static inline m4x4_d m4d_translation(double x, double y, double z); /* Returns translation matrix */
@@ -2722,11 +2722,11 @@ static inline int v2d_isZero(v2_d v) {
 // 3D Vectors Implementaions
 // -------------------------
 
-static inline v3_d v3d(double x, double y, double z) {
+static inline v3_d vec3d(double x, double y, double z) {
     return (v3_d){ .x=x, .y=y, .z=z };
 }
 
-static inline v3_d v3dInit(double i) {
+static inline v3_d vec3dInit(double i) {
     return (v3_d){ .x=i, .y=i, .z=i };
 }
 
@@ -2952,11 +2952,11 @@ static inline int v3d_isZero(v3_d v) {
 // 4D Vectors Implementaions
 // -------------------------
 
-static inline v4_d v4d(double x, double y, double z, double w) {
+static inline v4_d vec4d(double x, double y, double z, double w) {
     return (v4_d){ .x=x, .y=y, .z=z, .w=w };
 }
 
-static inline v4_d v4dInit(double i) {
+static inline v4_d vec4dInit(double i) {
     return (v4_d){ .x=i, .y=i, .z=i, .w=i };
 }
 
@@ -3541,11 +3541,11 @@ static inline qt_d v4d_to_qtd(v4_d v) {
 // ------------------------------
 
 
-static inline m4x4_d m4dv(v4_d c0, v4_d c1, v4_d c2, v4_d c3) {
+static inline m4x4_d mat4dv(v4_d c0, v4_d c1, v4_d c2, v4_d c3) {
     return (m4x4_d){ .c0 = c0, .c1 = c1, .c2 = c2, .c3 = c3 };
 }
 
-static inline m4x4_d m4d(
+static inline m4x4_d mat4d(
         double x0, double x1, double x2, double x3,
         double y0, double y1, double y2, double y3,
         double z0, double z1, double z2, double z3,
@@ -3558,7 +3558,7 @@ static inline m4x4_d m4d(
     };
 }
 
-static inline m4x4_d m4dInit(double i) {
+static inline m4x4_d mat4dInit(double i) {
     return (m4x4_d){
         .x0=i, .y0=i, .z0=i, .w0=i,
         .x1=i, .y1=i, .z1=i, .w1=i,
